@@ -1,10 +1,11 @@
 # LOCAL-RUNNER.md — Protocolo Seguro da Máquina Local Windows & Devin (B360-AOC)
 
-## 1. Estado Inicial Obrigatório
+## 1. Estado Operacional Ativo
 
-Por determinação constitucional (Seção 4 e Seção 16):
-- A integração com o **Devin (`IA-10`)** inicia **DESABILITADA** (`BLOQUEADO_VERIFICACAO_PENDENTE`) até que sua situação contratual e capacidades reais sejam verificadas pelo Orquestrador Humano.
-- Se o computador Windows estiver desligado, as missões locais permanecem preservadas na fila persistente (`AGUARDANDO_MAQUINA_LOCAL`).
+Por deliberação e autorização direta do **Orquestrador Humano (Marcelo)**:
+- A ponte do **Runner Local Windows com o Devin (`IA-10`)** encontra-se **ATIVA E HOMOLOGADA** (`CONECTADO_API_LOCAL`, `devinBridgeEnabled = true`, `devinContractVerified = true`).
+- O controle de ativação/pausa da ponte está disponível tanto no **Devin Command Center (`mod-21`)** quanto via endpoint `POST /api/governance/devin-bridge`.
+- Se o computador Windows estiver desligado ou a ponte for pausada, as missões locais permanecem preservadas na fila persistente (`AGUARDANDO_MAQUINA_LOCAL`).
 
 ## 2. Arquitetura de Segurança do Runner Local Windows
 

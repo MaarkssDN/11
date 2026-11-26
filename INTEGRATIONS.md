@@ -13,7 +13,7 @@
 | **IA-07** | Google AI Studio | Nuvem | Camada gratuita / AI Pro | Conectado (Ambiente Hospedeiro) |
 | **IA-08** | Codex | Nuvem | Vinculado ao ChatGPT Plus | Desconectado / Modo Assistido |
 | **IA-09** | GitHub Copilot | Nuvem | 1 assinatura Copilot Pro | Modo Assistido (GitHub Read-Only) |
-| **IA-10** | Devin | Operação local (Windows) | Verificação pendente | Bloqueado até verificação contratual |
+| **IA-10** | Devin | Operação local (Windows) | Runner Local Windows Ativo | Conectado via Ponte Runner Outbound Autenticada |
 
 ## 2. Pasta Histórica Google Drive
 

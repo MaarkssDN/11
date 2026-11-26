@@ -280,6 +280,18 @@ export default function App() {
     return { ok: true };
   };
 
+  const handleToggleDevinBridge = async (enabled: boolean, reason: string) => {
+    const res = await apiFetch('/api/governance/devin-bridge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled, reason }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.error };
+    await fetchState();
+    return { ok: true };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 p-6">
@@ -430,7 +442,15 @@ export default function App() {
           <div className="p-3 border-t border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-500 space-y-1 shrink-0">
             <div>Política Adicional: R$ 0,00</div>
             <div>Git Principal: Somente Leitura</div>
-            <div>Devin Windows: Desabilitado</div>
+            <div
+              className={
+                db.governance.devinBridgeEnabled
+                  ? 'text-emerald-700 dark:text-emerald-400 font-semibold'
+                  : 'text-amber-700 dark:text-amber-400'
+              }
+            >
+              Devin Windows: {db.governance.devinBridgeEnabled ? 'Ponte Runner Ativa' : 'Desabilitado'}
+            </div>
           </div>
         )}
       </aside>
@@ -560,6 +580,7 @@ export default function App() {
               onImportConversation={handleImportConversation}
               onSubmitAuditVerdict={handleSubmitAuditVerdict}
               onCreateMemory={handleCreateMemory}
+              onToggleDevinBridge={handleToggleDevinBridge}
             />
           )}
         </main>

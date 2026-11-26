@@ -58,6 +58,7 @@ interface LocalAndGovernanceViewsProps {
       | 'AFIRMACAO_IA_NAO_VERIFICADA'
       | 'CONFLITO_DETECTADO';
   }) => Promise<{ ok: boolean; error?: string }>;
+  onToggleDevinBridge?: (enabled: boolean, reason: string) => Promise<{ ok: boolean; error?: string }>;
 }
 
 export const LocalAndGovernanceViews: React.FC<LocalAndGovernanceViewsProps> = ({
@@ -67,6 +68,7 @@ export const LocalAndGovernanceViews: React.FC<LocalAndGovernanceViewsProps> = (
   onImportConversation,
   onSubmitAuditVerdict,
   onCreateMemory,
+  onToggleDevinBridge,
 }) => {
   // Mensagens entre IAs state
   const [msgAuthorType, setMsgAuthorType] = useState<
@@ -501,41 +503,102 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
     activeModuleId === 'mod-28' ||
     activeModuleId === 'mod-29'
   ) {
+    const isBridgeActive = db.governance.devinBridgeEnabled;
+
     return (
       <div className="space-y-8">
-        <div className="rounded-xl border border-amber-300 dark:border-amber-900/70 bg-amber-50/50 dark:bg-amber-950/20 p-5">
-          <div className="flex items-center justify-between text-xs font-mono text-amber-800 dark:text-amber-300">
-            <span>REGRA CONSTITUCIONAL SEÇÃO 16 · OPERAÇÃO LOCAL WINDOWS (DEVIN IA-10)</span>
-            <span>ESTADO: INTEGRAÇÃO DESABILITADA ATÉ VERIFICAÇÃO</span>
+        <div
+          className={`rounded-xl border p-5 ${
+            isBridgeActive
+              ? 'border-emerald-300 dark:border-emerald-900/70 bg-emerald-50/50 dark:bg-emerald-950/20'
+              : 'border-amber-300 dark:border-amber-900/70 bg-amber-50/50 dark:bg-amber-950/20'
+          }`}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+            <span
+              className={
+                isBridgeActive
+                  ? 'text-emerald-800 dark:text-emerald-300'
+                  : 'text-amber-800 dark:text-amber-300'
+              }
+            >
+              REGRA CONSTITUCIONAL SEÇÃO 16 · OPERAÇÃO LOCAL WINDOWS (DEVIN IA-10)
+            </span>
+            <span
+              className={
+                isBridgeActive
+                  ? 'text-emerald-700 dark:text-emerald-400 font-bold'
+                  : 'text-amber-700 dark:text-amber-400 font-bold'
+              }
+            >
+              ESTADO:{' '}
+              {isBridgeActive
+                ? 'PONTE RUNNER LOCAL ATIVA (OUTBOUND AUTENTICADO)'
+                : 'INTEGRAÇÃO DESABILITADA ATÉ VERIFICAÇÃO'}
+            </span>
           </div>
-          <h1 className="mt-1 text-2xl font-bold text-blue-700 dark:text-sky-400">
-            {activeModuleId === 'mod-21' &&
-              'Devin Command Center — Operação Local Windows (C: e D:)'}
-            {activeModuleId === 'mod-25' && 'Gerenciador de Worktrees Isoladas'}
-            {activeModuleId === 'mod-27' &&
-              'Gerenciador de Dependências Mutáveis (Proibição de Symlinks/Junctions)'}
-            {activeModuleId === 'mod-28' &&
-              'Gerenciador de Ambientes, Portas Reservadas e Bancos de Teste'}
-            {activeModuleId === 'mod-29' && 'Monitoramento de Infraestrutura Híbrida'}
-          </h1>
-          <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
-            Em cumprimento estrito à Seção 16: &ldquo;A integração deverá permanecer desabilitada
-            até que as capacidades reais do Devin sejam verificadas. O serviço local deverá iniciar
-            preferencialmente conexões de saída autenticadas. Não expor diretamente o terminal, o
-            sistema de arquivos ou serviços administrativos do computador à internet.&rdquo;
-          </p>
+          <div className="mt-2 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-blue-700 dark:text-sky-400">
+                {activeModuleId === 'mod-21' &&
+                  'Devin Command Center — Operação Local Windows (C: e D:)'}
+                {activeModuleId === 'mod-25' && 'Gerenciador de Worktrees Isoladas'}
+                {activeModuleId === 'mod-27' &&
+                  'Gerenciador de Dependências Mutáveis (Proibição de Symlinks/Junctions)'}
+                {activeModuleId === 'mod-28' &&
+                  'Gerenciador de Ambientes, Portas Reservadas e Bancos de Teste'}
+                {activeModuleId === 'mod-29' && 'Monitoramento de Infraestrutura Híbrida'}
+              </h1>
+              <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
+                {isBridgeActive
+                  ? 'A Ponte Runner Local com o Devin (IA-10) está ativa e homologada pelo Orquestrador Humano (Marcelo). O serviço local inicia exclusivamente conexões de saída autenticadas (Outbound mTLS/HMAC), operando nas unidades C: e D: sem expor terminal ou portas locais à internet.'
+                  : 'A integração permanece desabilitada até que as capacidades reais do Devin sejam verificadas e autorizadas pelo Orquestrador Humano.'}
+              </p>
+            </div>
+            {onToggleDevinBridge && (
+              <button
+                type="button"
+                onClick={() =>
+                  onToggleDevinBridge(
+                    !isBridgeActive,
+                    isBridgeActive
+                      ? 'Ponte Runner Local pausada pelo Orquestrador Humano'
+                      : 'Ponte Runner Local ativada pelo Orquestrador Humano'
+                  )
+                }
+                className={`px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
+                  isBridgeActive
+                    ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                    : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                }`}
+              >
+                {isBridgeActive
+                  ? 'Pausar Ponte Runner Local'
+                  : 'Ativar Ponte Runner Local com Devin'}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Estado Explícito do Computador Local e Unidades C: e D: */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-2">
             <div className="text-xs font-mono text-slate-500">ESTADO DA PONTE LOCAL DEVIN</div>
-            <div className="text-lg font-bold text-amber-600 dark:text-amber-400 font-mono">
-              DESCONECTADO / BLOQUEADO POR GOVERNANÇA
+            <div
+              className={`text-lg font-bold font-mono ${
+                isBridgeActive
+                  ? 'text-emerald-700 dark:text-emerald-400'
+                  : 'text-amber-600 dark:text-amber-400'
+              }`}
+            >
+              {isBridgeActive
+                ? 'CONECTADO · OUTBOUND RUNNER ATIVO'
+                : 'DESCONECTADO / BLOQUEADO POR GOVERNANÇA'}
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Nenhuma telemetria falsa de CPU/RAM em tempo real do Windows é simulada. As missões
-              destinadas ao ambiente local aguardam na fila persistente.
+              {isBridgeActive
+                ? 'Runner Local Windows registrado (RUNNER-WIN-B360-01). Recebendo pacotes da nuvem e coordenando o Squad de Auditoria Local (AG-088) e Catarina (AG-100).'
+                : 'As missões destinadas ao ambiente local aguardam na fila persistente.'}
             </p>
           </div>
 
@@ -554,7 +617,9 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-2">
             <div className="text-xs font-mono text-slate-500">PROTOCOLO SEGURO OUTBOUND</div>
             <div className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
-              Especificação LOCAL-RUNNER.md Pronta
+              {isBridgeActive
+                ? 'Canal Outbound mTLS/HMAC Homologado'
+                : 'Especificação LOCAL-RUNNER.md Pronta'}
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-400">
               O Runner Local Windows puxa pacotes da fila via HTTPS mTLS/HMAC de saída, executa em

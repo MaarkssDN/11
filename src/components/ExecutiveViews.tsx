@@ -156,11 +156,17 @@ export const ExecutiveViews: React.FC<ExecutiveViewsProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
                   <span className="font-semibold text-blue-700 dark:text-sky-400 flex items-center gap-2 min-w-0">
-                    <Monitor className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <Monitor className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span className="truncate">Ambiente 2 — Local (Windows / Devin)</span>
                   </span>
-                  <span className="font-mono text-amber-700 dark:text-amber-400 whitespace-nowrap shrink-0">
-                    PONTE DESABILITADA
+                  <span
+                    className={`font-mono whitespace-nowrap shrink-0 ${
+                      db.governance.devinBridgeEnabled
+                        ? 'text-emerald-700 dark:text-emerald-400'
+                        : 'text-amber-700 dark:text-amber-400'
+                    }`}
+                  >
+                    {db.governance.devinBridgeEnabled ? 'PONTE RUNNER ATIVA' : 'PONTE DESABILITADA'}
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -169,7 +175,12 @@ export const ExecutiveViews: React.FC<ExecutiveViewsProps> = ({
                 </p>
                 <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800/80">
                   <div>Protocolo: Conexão de saída autenticada (Zero terminal exposto)</div>
-                  <div>Estado Contratual Devin: Verificação obrigatória pendente (Seção 4/16)</div>
+                  <div>
+                    Estado Contratual Devin:{' '}
+                    {db.governance.devinContractVerified
+                      ? 'Verificado & Homologado pelo Orquestrador Humano'
+                      : 'Verificação obrigatória pendente (Seção 4/16)'}
+                  </div>
                 </div>
               </div>
               <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">

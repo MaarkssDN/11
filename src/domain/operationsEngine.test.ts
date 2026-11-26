@@ -380,5 +380,28 @@ test('Interceptador MSW (src/mocks/browser.ts) processa /api/state e /api/missio
     })
   );
   assert.equal(createMissionRes.status, 201);
+
+  const toggleDevinBridgeRes = await processMockApiRequest(
+    '/api/governance/devin-bridge',
+    'POST',
+    JSON.stringify({
+      enabled: true,
+      reason: 'Ponte Runner Local ativada pelo Orquestrador Humano',
+    })
+  );
+  assert.equal(toggleDevinBridgeRes.status, 200);
+  const bridgePayload = toggleDevinBridgeRes.data as {
+    governance: { devinBridgeEnabled: boolean; devinContractVerified: boolean };
+    provider: { connectionStatus: string };
+  };
+  assert.equal(bridgePayload.governance.devinBridgeEnabled, true);
+  assert.equal(bridgePayload.governance.devinContractVerified, true);
+  assert.equal(bridgePayload.provider.connectionStatus, 'CONECTADO_API_LOCAL');
+
+  const { createInitialSeedDatabase, saveDatabase } = await import('../server/db');
+  const freshSeed = createInitialSeedDatabase();
+  saveDatabase(freshSeed);
+  assert.equal(freshSeed.governance.devinBridgeEnabled, true);
+  assert.equal(freshSeed.governance.devinContractVerified, true);
 });
 

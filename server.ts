@@ -106,7 +106,8 @@ async function startServer() {
         executorIdentityVerified: true,
         permissionsVerified: true,
         governanceInstructionsLoaded: true,
-        resourceAvailabilityConfirmed: input.executorProviderId !== 'IA-10',
+        resourceAvailabilityConfirmed:
+          input.executorProviderId !== 'IA-10' || db.governance.devinBridgeEnabled,
         repoStateClean: pf ? pf.repoStateClean : true,
         exclusiveBranchAssigned: true,
         exclusiveWorktreeAssigned: pf ? pf.exclusiveWorktreeAssigned : true,
@@ -118,8 +119,9 @@ async function startServer() {
         reservedPortAssigned: true,
         isolatedTestDbSchemaAssigned: true,
         executionLeaseAcquired: pf
-          ? pf.executionLeaseAcquired && input.executorProviderId !== 'IA-10'
-          : input.executorProviderId !== 'IA-10',
+          ? pf.executionLeaseAcquired &&
+            (input.executorProviderId !== 'IA-10' || db.governance.devinBridgeEnabled)
+          : input.executorProviderId !== 'IA-10' || db.governance.devinBridgeEnabled,
         acceptanceCriteriaDefined: input.acceptanceCriteria.length > 0,
         checklistAttached: true,
         independentAuditorAssigned:
@@ -554,6 +556,114 @@ async function startServer() {
 
     saveDatabase(db);
     res.json({ governance: db.governance, automationJobs: db.automationJobs });
+  });
+
+  // 11. Controle da Ponte Runner Local Windows com o Devin (IA-10)
+  app.post('/api/governance/devin-bridge', (req, res) => {
+    const schema = z.object({
+      enabled: z.boolean(),
+      reason: z.string().min(3),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Informe o estado e o motivo para alterar a ponte do Runner Local Devin.' });
+      return;
+    }
+
+    const db = loadDatabase();
+    const { enabled, reason } = parsed.data;
+    const now = new Date().toISOString();
+
+    db.governance.devinBridgeEnabled = enabled;
+    db.governance.devinContractVerified = enabled;
+
+    const devinProvider = db.providers.find((p) => p.id === 'IA-10');
+    if (devinProvider) {
+      devinProvider.connectionStatus = enabled ? 'CONECTADO_API_LOCAL' : 'BLOQUEADO_VERIFICACAO_PENDENTE';
+      devinProvider.subscriptionSummary = enabled
+        ? 'Ponte Runner Local Windows Ativa e Homologada (R$ 0,00 adicional)'
+        : 'VERIFICAÇÃO CONTRATUAL PENDENTE (Seção 4 e Seção 16)';
+      devinProvider.consumptionLimitNote = enabled
+        ? 'Runner local Windows conectado via protocolo outbound autenticado nas unidades C: e D:.'
+        : 'Integração desabilitada até verificação contratual e confirmação de capacidades reais.';
+      devinProvider.capabilities = enabled
+        ? {
+            sendMission: 'SUPORTADO',
+            receiveResponse: 'SUPORTADO',
+            checkAvailability: 'SUPORTADO',
+            checkConsumption: 'SUPORTADO',
+            cancelExecution: 'SUPORTADO',
+            receiveEvents: 'SUPORTADO',
+            attachFiles: 'SUPORTADO',
+            queryResults: 'SUPORTADO',
+            supportAuth: 'SUPORTADO',
+            supportAutomation: 'SUPORTADO',
+          }
+        : {
+            sendMission: 'NAO_CONFIGURADO',
+            receiveResponse: 'NAO_CONFIGURADO',
+            checkAvailability: 'NAO_CONFIGURADO',
+            checkConsumption: 'NAO_CONFIGURADO',
+            cancelExecution: 'NAO_CONFIGURADO',
+            receiveEvents: 'NAO_CONFIGURADO',
+            attachFiles: 'NAO_CONFIGURADO',
+            queryResults: 'NAO_CONFIGURADO',
+            supportAuth: 'NAO_CONFIGURADO',
+            supportAutomation: 'NAO_CONFIGURADO',
+          };
+      devinProvider.integrationNotes = enabled
+        ? 'Ponte Runner Local Windows ATIVA via conexão de saída autenticada (Outbound mTLS/HMAC) nas unidades C: e D:.'
+        : 'Bloqueio constitucional preventivo: aguarda verificação contratual e ativação do protocolo seguro outbound no Windows.';
+    }
+
+    const devinSub = db.subscriptions.find((s) => s.providerId === 'IA-10');
+    if (devinSub) {
+      devinSub.tier = enabled ? 'Runner Local Windows Ativo' : 'Situação Contratual em Verificação';
+      devinSub.quotaStatus = enabled ? 'DISPONIVEL' : 'VERIFICACAO_CONTRATUAL_PENDENTE';
+    }
+
+    for (const msn of db.missions) {
+      if (msn.executorProviderId === 'IA-10') {
+        msn.preflight.resourceAvailabilityConfirmed = enabled;
+        msn.preflight.executionLeaseAcquired = enabled;
+        const evalRes = evaluateMissionPreflight(msn, db.missions);
+        msn.status = evalRes.passed ? 'PREFLIGHT_APROVADO' : 'BLOQUEADA_ISOLAMENTO';
+        msn.rejectionReason = evalRes.passed
+          ? null
+          : [...evalRes.failedChecks, ...evalRes.isolationConflicts].join(' | ');
+        msn.updatedAt = now;
+      }
+    }
+
+    for (const job of db.automationJobs) {
+      if (job.targetEnvironment === 'LOCAL_WINDOWS') {
+        if (enabled && job.status === 'AGUARDANDO_MAQUINA_LOCAL') {
+          job.status = 'LEASE_ATIVO';
+          job.leaseOwner = 'IA-10 (Devin Local Runner)';
+          job.lastHeartbeatAt = now;
+        } else if (!enabled && job.status === 'LEASE_ATIVO') {
+          job.status = 'AGUARDANDO_MAQUINA_LOCAL';
+          job.leaseOwner = null;
+        }
+      }
+    }
+
+    db.governance.auditLogs.unshift({
+      id: `LOG-${Date.now()}`,
+      timestamp: now,
+      actor: 'ORQUESTRADOR_HUMANO',
+      action: enabled ? 'PONTE_RUNNER_LOCAL_DEVIN_ATIVADA' : 'PONTE_RUNNER_LOCAL_DEVIN_DESATIVADA',
+      target: 'IA-10 (Devin Local Runner Windows)',
+      shaOrRef: reason,
+    });
+
+    saveDatabase(db);
+    res.json({
+      governance: db.governance,
+      provider: devinProvider,
+      missions: db.missions,
+      automationJobs: db.automationJobs,
+    });
   });
 
   // ==========================================================================

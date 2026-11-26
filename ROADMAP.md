@@ -14,8 +14,8 @@
 | **Onda 09** | Importador idempotente de históricos (Google Drive) | Concluída (Fundação) |
 | **Onda 10** | Central de Missões (23 etapas), Ondas e Prompt Studio | Concluída (Fundação) |
 | **Onda 11** | Checklists persistentes e detector de colisão de isolamento | Concluída (Fundação) |
-| **Onda 12** | Motor de automação independente de chat (filas e leases) | Em andamento |
-| **Onda 13** | Devin Command Center e protocolo seguro Windows | Em andamento (Aguarda verificação contratual Devin) |
+| **Onda 12** | Motor de automação independente de chat (filas e leases) | Concluída (Fundação) |
+| **Onda 13** | Devin Command Center e protocolo seguro Windows | Concluída (Ponte Runner Local Ativada) |
 | **Onda 14** | Catarina Command Center (mobilização seletiva por domínio) | Concluída (Fundação) |
 | **Onda 15** | Central de Auditoria Independente vinculada ao SHA | Concluída (Fundação) |
 | **Onda 16** | Git Integration Center (modo seguro somente leitura) | Em andamento |

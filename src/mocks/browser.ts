@@ -18,7 +18,7 @@ import {
   validateAuditApproval,
 } from '../domain/operationsEngine';
 
-const STORAGE_KEY = 'b360_aoc_msw_db_v2';
+const STORAGE_KEY = 'b360_aoc_msw_db_v3';
 
 const INITIAL_SAMPLE_DRIVE_CONVERSATION = `2026-11-20 [09:15] CONVERSA IMPORTADA (PASTA GOOGLE DRIVE: CONVERSAS ENTRE MARCELO E IAS)
 Participantes: Marcelo (Orquestrador Humano), Gemini, Claude, ChatGPT, Google AI Studio, Devin, Astra e Catarina.
@@ -260,25 +260,25 @@ export function createBrowserMockSeedState(): B360DatabaseState {
         id: 'IA-10',
         name: 'Devin',
         environment: 'Operação local (Windows)',
-        connectionStatus: 'BLOQUEADO_VERIFICACAO_PENDENTE',
+        connectionStatus: 'CONECTADO_API_LOCAL',
         roleDescription: 'Coordenador principal da operação local no computador Windows.',
-        subscriptionSummary: 'VERIFICAÇÃO CONTRATUAL PENDENTE',
-        consumptionLimitNote: 'Integração desabilitada até verificação contratual.',
-        inboxCount: 2,
-        outboxCount: 0,
+        subscriptionSummary: 'Ponte Runner Local Windows Ativa e Homologada (R$ 0,00 adicional)',
+        consumptionLimitNote: 'Runner local Windows conectado via protocolo outbound autenticado nas unidades C: e D:.',
+        inboxCount: 4,
+        outboxCount: 3,
         capabilities: {
-          sendMission: 'NAO_CONFIGURADO',
-          receiveResponse: 'NAO_CONFIGURADO',
-          checkAvailability: 'NAO_CONFIGURADO',
-          checkConsumption: 'NAO_CONFIGURADO',
-          cancelExecution: 'NAO_CONFIGURADO',
-          receiveEvents: 'NAO_CONFIGURADO',
-          attachFiles: 'NAO_CONFIGURADO',
-          queryResults: 'NAO_CONFIGURADO',
-          supportAuth: 'NAO_CONFIGURADO',
-          supportAutomation: 'NAO_CONFIGURADO',
+          sendMission: 'SUPORTADO',
+          receiveResponse: 'SUPORTADO',
+          checkAvailability: 'SUPORTADO',
+          checkConsumption: 'SUPORTADO',
+          cancelExecution: 'SUPORTADO',
+          receiveEvents: 'SUPORTADO',
+          attachFiles: 'SUPORTADO',
+          queryResults: 'SUPORTADO',
+          supportAuth: 'SUPORTADO',
+          supportAutomation: 'SUPORTADO',
         },
-        integrationNotes: 'Bloqueio constitucional preventivo até confirmação do Orquestrador Humano.',
+        integrationNotes: 'Ponte Runner Local Windows ATIVA via conexão de saída autenticada (Outbound mTLS/HMAC) nas unidades C: e D: por autorização do Orquestrador Humano.',
       },
     ],
     subscriptions: [
@@ -1021,12 +1021,12 @@ export function createBrowserMockSeedState(): B360DatabaseState {
         triggerType: 'FILA_LOCAL_DEVIN',
         coordinatorProviderId: 'IA-05',
         targetEnvironment: 'LOCAL_WINDOWS',
-        status: 'AGUARDANDO_MAQUINA_LOCAL',
+        status: 'LEASE_ATIVO',
         priority: 2,
         retryCount: 0,
         maxRetries: 5,
-        leaseOwner: null,
-        lastHeartbeatAt: null,
+        leaseOwner: 'IA-10 (Devin Local Runner)',
+        lastHeartbeatAt: '2026-11-26T10:45:00.000Z',
         idempotencyKey: 'idem-local-queue-msn-001',
       },
     ],
@@ -1038,12 +1038,20 @@ export function createBrowserMockSeedState(): B360DatabaseState {
       currentAdditionalSpendBrl: 0.0,
       autoPaidApiBlocked: true,
       gitSafeReadOnlyMode: true,
-      devinBridgeEnabled: false,
-      devinContractVerified: false,
+      devinBridgeEnabled: true,
+      devinContractVerified: true,
       primaryProductRepo: 'https://github.com/MaarkssDN/Birthub-360',
       operationsRepo: 'Birthub-360-Operations',
       googleDriveConversationsUrl: 'https://drive.google.com/drive/folders/1GQNRJFUxO3WNgct8SChRRJkwnA_vsMAW',
       auditLogs: [
+        {
+          id: 'LOG-003',
+          timestamp: '2026-11-26T10:45:00.000Z',
+          actor: 'Marcelo (Orquestrador Humano)',
+          action: 'PONTE_RUNNER_LOCAL_DEVIN_ATIVADA',
+          target: 'IA-10 (Devin Local Runner Windows)',
+          shaOrRef: '4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d',
+        },
         {
           id: 'LOG-001',
           timestamp: '2026-11-25T12:00:00.000Z',
@@ -1097,10 +1105,10 @@ export function buildAdapterDiagnostics(providers: AIProvider[]) {
       provider.connectionStatus === 'CONECTADO_API_LOCAL' ||
       provider.connectionStatus === 'MODO_ASSISTIDO_HUMANO',
     mode:
-      provider.id === 'IA-10'
-        ? 'BLOQUEADO_GOVERNANCA'
-        : provider.connectionStatus === 'CONECTADO_API_LOCAL'
+      provider.connectionStatus === 'CONECTADO_API_LOCAL'
         ? 'API_NATIVA_ATIVA'
+        : provider.id === 'IA-10'
+        ? 'BLOQUEADO_GOVERNANCA'
         : provider.connectionStatus === 'MODO_ASSISTIDO_HUMANO'
         ? 'MODO_ASSISTIDO_HUMANO'
         : 'DESCONECTADO_NAO_CONFIGURADO',
@@ -1209,7 +1217,8 @@ export async function processMockApiRequest(
         executorIdentityVerified: true,
         permissionsVerified: true,
         governanceInstructionsLoaded: true,
-        resourceAvailabilityConfirmed: input.executorProviderId !== 'IA-10',
+        resourceAvailabilityConfirmed:
+          input.executorProviderId !== 'IA-10' || db.governance.devinBridgeEnabled,
         repoStateClean: pf ? pf.repoStateClean : true,
         exclusiveBranchAssigned: true,
         exclusiveWorktreeAssigned: pf ? pf.exclusiveWorktreeAssigned : true,
@@ -1221,8 +1230,9 @@ export async function processMockApiRequest(
         reservedPortAssigned: true,
         isolatedTestDbSchemaAssigned: true,
         executionLeaseAcquired: pf
-          ? pf.executionLeaseAcquired && input.executorProviderId !== 'IA-10'
-          : input.executorProviderId !== 'IA-10',
+          ? pf.executionLeaseAcquired &&
+            (input.executorProviderId !== 'IA-10' || db.governance.devinBridgeEnabled)
+          : input.executorProviderId !== 'IA-10' || db.governance.devinBridgeEnabled,
         acceptanceCriteriaDefined: input.acceptanceCriteria.length > 0,
         checklistAttached: true,
         independentAuditorAssigned:
@@ -1489,6 +1499,85 @@ export async function processMockApiRequest(
     return { status: 201, data: { memory: newMemory } };
   }
 
+  if (upperMethod === 'POST' && cleanPath === '/api/governance/devin-bridge') {
+    const payload = (body || {}) as Record<string, any>;
+    const enabled = Boolean(payload.enabled);
+    const reason = String(payload.reason || 'Deliberação do Orquestrador Humano');
+    const now = new Date().toISOString();
+    const db = getBrowserMockDb();
+
+    db.governance.devinBridgeEnabled = enabled;
+    db.governance.devinContractVerified = enabled;
+
+    const devinProvider = db.providers.find((p) => p.id === 'IA-10');
+    if (devinProvider) {
+      devinProvider.connectionStatus = enabled ? 'CONECTADO_API_LOCAL' : 'BLOQUEADO_VERIFICACAO_PENDENTE';
+      devinProvider.subscriptionSummary = enabled
+        ? 'Ponte Runner Local Windows Ativa e Homologada (R$ 0,00 adicional)'
+        : 'VERIFICAÇÃO CONTRATUAL PENDENTE';
+      devinProvider.capabilities = enabled
+        ? {
+            sendMission: 'SUPORTADO',
+            receiveResponse: 'SUPORTADO',
+            checkAvailability: 'SUPORTADO',
+            checkConsumption: 'SUPORTADO',
+            cancelExecution: 'SUPORTADO',
+            receiveEvents: 'SUPORTADO',
+            attachFiles: 'SUPORTADO',
+            queryResults: 'SUPORTADO',
+            supportAuth: 'SUPORTADO',
+            supportAutomation: 'SUPORTADO',
+          }
+        : {
+            sendMission: 'NAO_CONFIGURADO',
+            receiveResponse: 'NAO_CONFIGURADO',
+            checkAvailability: 'NAO_CONFIGURADO',
+            checkConsumption: 'NAO_CONFIGURADO',
+            cancelExecution: 'NAO_CONFIGURADO',
+            receiveEvents: 'NAO_CONFIGURADO',
+            attachFiles: 'NAO_CONFIGURADO',
+            queryResults: 'NAO_CONFIGURADO',
+            supportAuth: 'NAO_CONFIGURADO',
+            supportAutomation: 'NAO_CONFIGURADO',
+          };
+      devinProvider.integrationNotes = enabled
+        ? 'Ponte Runner Local Windows ATIVA via conexão de saída autenticada (Outbound mTLS/HMAC) nas unidades C: e D:.'
+        : 'Bloqueio constitucional preventivo até confirmação do Orquestrador Humano.';
+    }
+
+    for (const msn of db.missions) {
+      if (msn.executorProviderId === 'IA-10') {
+        msn.preflight.resourceAvailabilityConfirmed = enabled;
+        msn.preflight.executionLeaseAcquired = enabled;
+        const evalRes = evaluateMissionPreflight(msn, db.missions);
+        msn.status = evalRes.passed ? 'PREFLIGHT_APROVADO' : 'BLOQUEADA_ISOLAMENTO';
+        msn.rejectionReason = evalRes.passed
+          ? null
+          : [...evalRes.failedChecks, ...evalRes.isolationConflicts].join(' | ');
+        msn.updatedAt = now;
+      }
+    }
+
+    db.governance.auditLogs.unshift({
+      id: `LOG-${Date.now()}`,
+      timestamp: now,
+      actor: 'ORQUESTRADOR_HUMANO',
+      action: enabled ? 'PONTE_RUNNER_LOCAL_DEVIN_ATIVADA' : 'PONTE_RUNNER_LOCAL_DEVIN_DESATIVADA',
+      target: 'IA-10 (Devin Local Runner Windows)',
+      shaOrRef: reason,
+    });
+
+    saveBrowserMockDb(db);
+    return {
+      status: 200,
+      data: {
+        governance: db.governance,
+        provider: devinProvider,
+        missions: db.missions,
+      },
+    };
+  }
+
   return { status: 404, data: { error: `Rota mock não encontrada: ${cleanPath}` } };
 }
 
@@ -1563,6 +1652,12 @@ export const handlers = [
   http.post('/api/memories', async ({ request }) => {
     const body = await request.json();
     const res = await processMockApiRequest('/api/memories', 'POST', body);
+    return HttpResponse.json(res.data as Record<string, unknown>, { status: res.status });
+  }),
+
+  http.post('/api/governance/devin-bridge', async ({ request }) => {
+    const body = await request.json();
+    const res = await processMockApiRequest('/api/governance/devin-bridge', 'POST', body);
     return HttpResponse.json(res.data as Record<string, unknown>, { status: res.status });
   }),
 ];

@@ -35,14 +35,16 @@ export function evaluateProviderAdapterStatus(provider: AIProvider): ProviderHea
   }
 
   if (provider.id === 'IA-10') {
+    const isDevinActive = provider.connectionStatus === 'CONECTADO_API_LOCAL';
     return {
       providerId: provider.id,
       providerName: provider.name,
       checkedAt: now,
-      reachable: false,
-      mode: 'BLOQUEADO_GOVERNANCA',
-      diagnosticMessage:
-        'Integração local Devin permanece explicitamente DESABILITADA por regra constitucional (Seção 16) até verificação contratual e ativação do Runner Local Windows com conexão de saída autenticada.',
+      reachable: isDevinActive,
+      mode: isDevinActive ? 'API_NATIVA_ATIVA' : 'BLOQUEADO_GOVERNANCA',
+      diagnosticMessage: isDevinActive
+        ? 'Ponte Runner Local Windows com o Devin (IA-10) ATIVA por autorização do Orquestrador Humano (Marcelo). Conexão exclusivamente de saída autenticada (Outbound mTLS/HMAC) nas unidades C: e D: sem exposição de terminal.'
+        : 'Integração local Devin permanece explicitamente DESABILITADA por regra constitucional (Seção 16) até verificação contratual e ativação do Runner Local Windows com conexão de saída autenticada.',
     };
   }
 
