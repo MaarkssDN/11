@@ -1121,6 +1121,68 @@
   ],
   "missions": [
     {
+      "id": "MSN-004",
+      "code": "B360-MSN-004",
+      "title": "Validar Handlers MSW e Schema Relacional D1",
+      "waveId": "ONDA-12",
+      "squadId": "SQ-CATARINA-100",
+      "stepNumber": 8,
+      "stepCode": "08_PREFLIGHT_OBRIGATORIO",
+      "status": "BLOQUEADA_ISOLAMENTO",
+      "executorProviderId": "IA-07",
+      "executorAgentId": "AG-012",
+      "auditorAgentId": "AG-088",
+      "catarinaSpecialistIds": [
+        "AG-100"
+      ],
+      "priority": "CRITICA",
+      "acceptanceCriteria": [
+        "Persistencia de fila verificada",
+        "Zero dependencia de janela de chat aberta"
+      ],
+      "dependencies": [],
+      "isolation": {
+        "worktreePath": "D:/Birthub360-Operations/worktrees/msn-003-queue",
+        "branchName": "wave/12-persistent-queue-worker",
+        "baseSha": "8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b",
+        "currentHeadSha": "8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b",
+        "ownedModules": [
+          "src/server/queueWorker.ts"
+        ],
+        "isolatedNodeModulesPath": "D:/Birthub360-Operations/worktrees/msn-003-queue/node_modules",
+        "reservedPort": 3103,
+        "testDbSchema": "d1_test_msn_004",
+        "leaseId": "LEASE-B360-004",
+        "leaseExpiresAt": "2026-11-27T00:42:07.285Z",
+        "cpuLimitPercent": 50,
+        "memoryLimitMb": 2048
+      },
+      "preflight": {
+        "executorIdentityVerified": true,
+        "permissionsVerified": true,
+        "governanceInstructionsLoaded": true,
+        "resourceAvailabilityConfirmed": true,
+        "repoStateClean": true,
+        "exclusiveBranchAssigned": true,
+        "exclusiveWorktreeAssigned": true,
+        "baseShaRecorded": true,
+        "noUncommittedChanges": true,
+        "moduleOwnershipVerified": true,
+        "isolatedMutableDependencies": true,
+        "noUnsafeSymlinksOrJunctions": true,
+        "reservedPortAssigned": true,
+        "isolatedTestDbSchemaAssigned": true,
+        "executionLeaseAcquired": true,
+        "acceptanceCriteriaDefined": true,
+        "checklistAttached": true,
+        "independentAuditorAssigned": true
+      },
+      "approvedSha": null,
+      "rejectionReason": "Colisão de Worktree com a missão B360-MSN-003 (D:/Birthub360-Operations/worktrees/msn-003-queue). | Colisão de Branch com a missão B360-MSN-003 (wave/12-persistent-queue-worker). | Colisão de Porta Reservada (3103) com a missão B360-MSN-003. | Colisão de Ownership nos módulos [src/server/queueWorker.ts] com a missão B360-MSN-003.",
+      "createdAt": "2026-11-26T00:42:07.284Z",
+      "updatedAt": "2026-11-26T00:42:07.284Z"
+    },
+    {
       "id": "MSN-003",
       "code": "B360-MSN-003",
       "title": "Homologar Leases Persistentes Cloudflare D1",
@@ -1818,6 +1880,14 @@
     "operationsRepo": "Birthub-360-Operations",
     "googleDriveConversationsUrl": "https://drive.google.com/drive/folders/1GQNRJFUxO3WNgct8SChRRJkwnA_vsMAW",
     "auditLogs": [
+      {
+        "id": "LOG-1795653727285",
+        "timestamp": "2026-11-26T00:42:07.284Z",
+        "actor": "ORQUESTRADOR_HUMANO",
+        "action": "CRIACAO_MISSAO_BLOQUEADA_ISOLAMENTO",
+        "target": "B360-MSN-004 (Validar Handlers MSW e Schema Relacional D1)",
+        "shaOrRef": "8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b"
+      },
       {
         "id": "LOG-1795652944391",
         "timestamp": "2026-11-26T00:29:04.391Z",

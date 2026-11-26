@@ -15,6 +15,7 @@ import {
 import {
   B360DatabaseState,
   CreateMissionInput,
+  CreateMissionInputSchema,
   MISSION_LIFECYCLE_STEPS,
 } from '../shared/contracts';
 import { evaluateMissionPreflight } from '../domain/operationsEngine';
@@ -52,8 +53,12 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
   const [selectedMissionId, setSelectedMissionId] = useState<string>(
     db.missions[0]?.id || 'MSN-001'
   );
+  const [formCode, setFormCode] = useState(
+    `B360-MSN-${String(db.missions.length + 1).padStart(3, '0')}`
+  );
   const [formTitle, setFormTitle] = useState('');
   const [formWaveId, setFormWaveId] = useState('ONDA-12');
+  const [formSquadId, setFormSquadId] = useState('SQ-DEV-NUVEM');
   const [formProviderId, setFormProviderId] = useState('IA-07');
   const [formExecutorAgentId, setFormExecutorAgentId] = useState('AG-012');
   const [formAuditorAgentId, setFormAuditorAgentId] = useState('AG-088');
@@ -68,6 +73,14 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
   const [formCriteria, setFormCriteria] = useState(
     'Persistencia de fila verificada; Zero dependencia de janela de chat aberta'
   );
+  const [formPreflightConfig, setFormPreflightConfig] = useState({
+    repoStateClean: true,
+    exclusiveWorktreeAssigned: true,
+    isolatedMutableDependencies: true,
+    noUnsafeSymlinksOrJunctions: true,
+    executionLeaseAcquired: true,
+    independentAuditorAssigned: true,
+  });
   const [missionFeedback, setMissionFeedback] = useState<string | null>(null);
   const [missionError, setMissionError] = useState<string | null>(null);
 
@@ -92,14 +105,11 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
     setMissionError(null);
     setMissionFeedback(null);
 
-    if (!formTitle.trim()) {
-      setMissionError('Informe o título da missão antes de criar.');
-      return;
-    }
-
-    const result = await onCreateMission({
+    const candidatePayload = {
+      code: formCode.trim(),
       title: formTitle.trim(),
       waveId: formWaveId,
+      squadId: formSquadId,
       executorProviderId: formProviderId,
       executorAgentId: formExecutorAgentId,
       auditorAgentId: formAuditorAgentId,
@@ -116,15 +126,40 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
         .split(';')
         .map((s) => s.trim())
         .filter(Boolean),
-    });
+      preflightConfig: {
+        ...formPreflightConfig,
+        independentAuditorAssigned:
+          formPreflightConfig.independentAuditorAssigned &&
+          formExecutorAgentId !== formAuditorAgentId,
+      },
+    };
+
+    const parsed = CreateMissionInputSchema.safeParse(candidatePayload);
+    if (!parsed.success) {
+      const formattedIssues = parsed.error.issues
+        .map((issue) => `${issue.path.join('.') || 'campo'}: ${issue.message}`)
+        .join(' | ');
+      setMissionError(`Falha na validação Zod da missão: ${formattedIssues}`);
+      return;
+    }
+
+    if (parsed.data.executorAgentId === parsed.data.auditorAgentId) {
+      setMissionError(
+        'Violação Constitucional (Seção 19): O Agente Executor não pode ser o próprio Auditor Independente da missão.'
+      );
+      return;
+    }
+
+    const result = await onCreateMission(parsed.data);
 
     if (!result.ok) {
       setMissionError(result.error || 'Erro ao criar missão.');
     } else {
       setMissionFeedback(
-        'Missão criada com isolamento exclusivo, preflight avaliado e registrada no banco persistente.'
+        `Missão ${parsed.data.code} criada com validação Zod, squad ${parsed.data.squadId}, preflight avaliado e registrada no banco persistente.`
       );
       setFormTitle('');
+      setFormCode(`B360-MSN-${String(db.missions.length + 2).padStart(3, '0')}`);
       setFormPort((p) => p + 1);
     }
   };
@@ -325,7 +360,8 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
                 >
                   <div className="flex items-center justify-between text-xs font-mono">
                     <span className="font-bold text-slate-900 dark:text-slate-100">
-                      {msn.code} · {msn.waveId} · Prioridade {msn.priority}
+                      {msn.code} · {msn.waveId} · {msn.squadId || 'SQ-DEV-NUVEM'} · Prioridade{' '}
+                      {msn.priority}
                     </span>
                     <span className="text-blue-600 dark:text-blue-400">
                       Etapa {msn.stepNumber}/23 · {msn.status}
@@ -350,30 +386,99 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
             </div>
           </div>
 
-          {/* Formulário CRUD Real para Criar Nova Missão Isolada */}
+          {/* Formulário CRUD Real para Criar Nova Missão Isolada (Validação Zod + Preflight) */}
           <form
             onSubmit={handleSubmitNewMission}
             className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3"
           >
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Criar Nova Missão Isolada (Com Preflight Automático)
-            </h3>
-
             <div>
-              <label
-                htmlFor="msn-title"
-                className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
-              >
-                Título da Missão
-              </label>
-              <input
-                id="msn-title"
-                type="text"
-                value={formTitle}
-                onChange={(e) => setFormTitle(e.target.value)}
-                placeholder="Ex: Implementar Fila Persistente de Leases"
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
-              />
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                Criar Nova Missão Isolada (Com Preflight & Validação Zod)
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Contrato validado via CreateMissionInputSchema (identificação, prioridade, squad e preflight)
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label
+                  htmlFor="msn-code"
+                  className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  Código (ID)
+                </label>
+                <input
+                  id="msn-code"
+                  type="text"
+                  value={formCode}
+                  onChange={(e) => setFormCode(e.target.value)}
+                  placeholder="B360-MSN-003"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs font-mono text-slate-900 dark:text-slate-100"
+                />
+              </div>
+              <div className="col-span-2">
+                <label
+                  htmlFor="msn-title"
+                  className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  Título da Missão
+                </label>
+                <input
+                  id="msn-title"
+                  type="text"
+                  value={formTitle}
+                  onChange={(e) => setFormTitle(e.target.value)}
+                  placeholder="Ex: Implementar Fila Persistente de Leases"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label
+                  htmlFor="msn-priority"
+                  className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  Prioridade Operacional
+                </label>
+                <select
+                  id="msn-priority"
+                  value={formPriority}
+                  onChange={(e) =>
+                    setFormPriority(
+                      e.target.value as 'CRITICA' | 'ALTA' | 'MEDIA' | 'BAIXA'
+                    )
+                  }
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100"
+                >
+                  <option value="CRITICA">CRITICA (P0)</option>
+                  <option value="ALTA">ALTA (P1)</option>
+                  <option value="MEDIA">MEDIA (P2)</option>
+                  <option value="BAIXA">BAIXA (P3)</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="msn-squad"
+                  className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  Squad Responsável
+                </label>
+                <select
+                  id="msn-squad"
+                  value={formSquadId}
+                  onChange={(e) => setFormSquadId(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100"
+                >
+                  {db.squads.map((sq) => (
+                    <option key={sq.id} value={sq.id}>
+                      {sq.id} · {sq.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -527,11 +632,88 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
               />
             </div>
 
+            {/* Configuração de Preflight Técnico Obrigatório */}
+            <fieldset className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-3 space-y-1.5">
+              <legend className="text-xs font-semibold text-slate-800 dark:text-slate-200 px-1">
+                Configuração de Preflight Técnico (Seção 15)
+              </legend>
+              <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formPreflightConfig.repoStateClean}
+                  onChange={(e) =>
+                    setFormPreflightConfig((prev) => ({
+                      ...prev,
+                      repoStateClean: e.target.checked,
+                    }))
+                  }
+                  className="rounded border-slate-300"
+                />
+                <span>Repositório limpo e sincronizado com SHA base</span>
+              </label>
+              <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formPreflightConfig.exclusiveWorktreeAssigned}
+                  onChange={(e) =>
+                    setFormPreflightConfig((prev) => ({
+                      ...prev,
+                      exclusiveWorktreeAssigned: e.target.checked,
+                    }))
+                  }
+                  className="rounded border-slate-300"
+                />
+                <span>Worktree exclusiva alocada sem sobreposição</span>
+              </label>
+              <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formPreflightConfig.isolatedMutableDependencies}
+                  onChange={(e) =>
+                    setFormPreflightConfig((prev) => ({
+                      ...prev,
+                      isolatedMutableDependencies: e.target.checked,
+                    }))
+                  }
+                  className="rounded border-slate-300"
+                />
+                <span>Dependências mutáveis isoladas (node_modules/.next/dist)</span>
+              </label>
+              <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formPreflightConfig.noUnsafeSymlinksOrJunctions}
+                  onChange={(e) =>
+                    setFormPreflightConfig((prev) => ({
+                      ...prev,
+                      noUnsafeSymlinksOrJunctions: e.target.checked,
+                    }))
+                  }
+                  className="rounded border-slate-300"
+                />
+                <span>Zero junctions, symlinks ou hardlinks inseguros</span>
+              </label>
+              <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formPreflightConfig.executionLeaseAcquired}
+                  onChange={(e) =>
+                    setFormPreflightConfig((prev) => ({
+                      ...prev,
+                      executionLeaseAcquired: e.target.checked,
+                    }))
+                  }
+                  className="rounded border-slate-300"
+                />
+                <span>Lease de execução e porta reservada adquiridas</span>
+              </label>
+            </fieldset>
+
             <button
               type="submit"
               className="w-full py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors"
             >
-              Registrar Missão & Executar Preflight
+              Validar com Zod & Registrar Missão
             </button>
           </form>
         </div>

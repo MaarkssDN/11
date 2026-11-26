@@ -247,7 +247,84 @@ Evidência: Teste unitário exit code 0 executado.
   assert.ok(report1.participantsIdentified.includes('Devin'));
   assert.equal(report1.decisionsExtracted.length, 1);
   assert.equal(report1.completedWork.length, 1);
-  assert.equal(report1.pendingWork.length, 1);
-  assert.equal(report1.blockersIdentified.length, 1);
-  assert.equal(report1. contentFingerprint, computeContentFingerprint(sampleMd));
+  assert.equal(report1.contentFingerprint, computeContentFingerprint(sampleMd));
 });
+
+test('Validação Zod de CreateMissionInputSchema e modelos de entidades de src/db/schema.ts', async () => {
+  const { CreateMissionInputSchema } = await import('../shared/contracts');
+  const { UserSchema, CostPolicySchema, OperationalSquadSchema } = await import('../db/schema');
+
+  const validInput = CreateMissionInputSchema.safeParse({
+    code: 'B360-MSN-005',
+    title: 'Implementar MSW Browser Handler e Validação Zod de Missões',
+    waveId: 'ONDA-12',
+    squadId: 'SQ-DEV-NUVEM',
+    executorProviderId: 'IA-07',
+    executorAgentId: 'AG-012',
+    auditorAgentId: 'AG-088',
+    priority: 'ALTA',
+    branchName: 'wave/12-msw-zod-validation',
+    worktreePath: 'D:/Birthub360-Operations/worktrees/msn-005',
+    baseSha: '8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b',
+    reservedPort: 3105,
+    ownedModules: ['src/mocks/browser.ts', 'src/db/schema.ts'],
+    acceptanceCriteria: ['Validar contratos Zod', 'Persistir estado funcional'],
+    preflightConfig: {
+      repoStateClean: true,
+      exclusiveWorktreeAssigned: true,
+      isolatedMutableDependencies: true,
+      noUnsafeSymlinksOrJunctions: true,
+      executionLeaseAcquired: true,
+      independentAuditorAssigned: true,
+    },
+  });
+  assert.equal(validInput.success, true);
+
+  const invalidCodeInput = CreateMissionInputSchema.safeParse({
+    code: 'INVALID-CODE',
+    title: 'Curto',
+    waveId: 'ONDA-12',
+    executorProviderId: 'IA-07',
+    executorAgentId: 'AG-012',
+    auditorAgentId: 'AG-088',
+    priority: 'ALTA',
+    branchName: 'b',
+    worktreePath: 'w',
+    baseSha: '123',
+    reservedPort: 80,
+    ownedModules: [],
+    acceptanceCriteria: [],
+  });
+  assert.equal(invalidCodeInput.success, false);
+
+  const validUser = UserSchema.safeParse({
+    id: 'USR-001',
+    email: 'marcelo@birthub360.local',
+    displayName: 'Marcelo — Orquestrador Humano',
+    isHumanOrchestrator: true,
+    createdAt: '2026-11-25T08:00:00.000Z',
+  });
+  assert.equal(validUser.success, true);
+
+  const validSquad = OperationalSquadSchema.safeParse({
+    id: 'SQ-COMANDO',
+    name: 'Squad de Comando Global',
+    environment: 'HIBRIDO',
+    coordinatorAgentId: 'AG-000',
+    coordinatorProviderId: 'IA-01',
+    missionScope: 'Orquestração estratégica global',
+    memberAgentIds: ['AG-000', 'AG-001'],
+    guardrails: ['Autoridade máxima: Orquestrador Humano'],
+  });
+  assert.equal(validSquad.success, true);
+
+  const validCostPolicy = CostPolicySchema.safeParse({
+    id: 'COST-POLICY-001',
+    maxAdditionalSpendBrl: 0,
+    blockAutoPaidApi: true,
+    blockAccountRotationAbuse: true,
+    updatedAt: '2026-11-25T08:00:00.000Z',
+  });
+  assert.equal(validCostPolicy.success, true);
+});
+

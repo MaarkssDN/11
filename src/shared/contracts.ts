@@ -233,6 +233,7 @@ export const MissionSchema = z.object({
   code: z.string(),
   title: z.string(),
   waveId: z.string(),
+  squadId: z.string().optional(),
   stepNumber: z.number().min(1).max(23),
   stepCode: z.string(),
   status: z.enum(['PLANEJADA', 'PREFLIGHT_PENDENTE', 'PREFLIGHT_APROVADO', 'EM_EXECUCAO', 'EM_AUDITORIA', 'APROVADA_SHA', 'REPROVADA_AUDITORIA', 'BLOQUEADA_ISOLAMENTO', 'CONCLUIDA']),
@@ -254,8 +255,13 @@ export const MissionSchema = z.object({
 export type Mission = z.infer<typeof MissionSchema>;
 
 export const CreateMissionInputSchema = z.object({
+  code: z
+    .string()
+    .regex(/^B360-MSN-\d{3,}$/, 'O identificador deve seguir o padrão B360-MSN-000.')
+    .optional(),
   title: z.string().min(5, 'O título da missão deve ter pelo menos 5 caracteres.'),
   waveId: z.string().min(1, 'Selecione uma onda válida.'),
+  squadId: z.string().min(1, 'Selecione o squad operacional responsável.').optional(),
   executorProviderId: z.string().min(1, 'Selecione a IA executora.'),
   executorAgentId: z.string().min(1, 'Selecione o agente executor.'),
   auditorAgentId: z.string().min(1, 'Selecione o auditor independente.'),
@@ -263,9 +269,19 @@ export const CreateMissionInputSchema = z.object({
   branchName: z.string().min(3, 'Informe a branch exclusiva da missão.'),
   worktreePath: z.string().min(3, 'Informe o caminho da worktree exclusiva.'),
   baseSha: z.string().regex(/^[0-9a-f]{7,40}$/i, 'O SHA base deve ser um hash Git hexadecimal válido (7 a 40 caracteres).'),
-  reservedPort: z.number().int().min(3001).max(65535),
+  reservedPort: z.number().int().min(3001, 'A porta reservada deve ser entre 3001 e 65535.').max(65535),
   ownedModules: z.array(z.string()).min(1, 'Defina pelo menos um módulo sob ownership da missão.'),
   acceptanceCriteria: z.array(z.string()).min(1, 'Defina pelo menos um critério de aceite verificável.'),
+  preflightConfig: z
+    .object({
+      repoStateClean: z.boolean(),
+      exclusiveWorktreeAssigned: z.boolean(),
+      isolatedMutableDependencies: z.boolean(),
+      noUnsafeSymlinksOrJunctions: z.boolean(),
+      executionLeaseAcquired: z.boolean(),
+      independentAuditorAssigned: z.boolean(),
+    })
+    .optional(),
 });
 
 export type CreateMissionInput = z.infer<typeof CreateMissionInputSchema>;

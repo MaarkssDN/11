@@ -62,7 +62,7 @@ async function startServer() {
 
     const input = parsed.data;
     const nextNum = db.missions.length + 1;
-    const code = `B360-MSN-${String(nextNum).padStart(3, '0')}`;
+    const code = input.code || `B360-MSN-${String(nextNum).padStart(3, '0')}`;
     const now = new Date().toISOString();
 
     const specialists = selectCatarinaSpecialistsForModules(
@@ -71,11 +71,13 @@ async function startServer() {
       db.agents
     );
 
+    const pf = input.preflightConfig;
     const newMission: import('./src/shared/contracts').Mission = {
       id: `MSN-${String(nextNum).padStart(3, '0')}`,
       code,
       title: input.title,
       waveId: input.waveId,
+      squadId: input.squadId || 'SQ-DEV-NUVEM',
       stepNumber: 8,
       stepCode: '08_PREFLIGHT_OBRIGATORIO',
       status: 'PREFLIGHT_PENDENTE',
@@ -105,20 +107,24 @@ async function startServer() {
         permissionsVerified: true,
         governanceInstructionsLoaded: true,
         resourceAvailabilityConfirmed: input.executorProviderId !== 'IA-10',
-        repoStateClean: true,
+        repoStateClean: pf ? pf.repoStateClean : true,
         exclusiveBranchAssigned: true,
-        exclusiveWorktreeAssigned: true,
+        exclusiveWorktreeAssigned: pf ? pf.exclusiveWorktreeAssigned : true,
         baseShaRecorded: true,
-        noUncommittedChanges: true,
+        noUncommittedChanges: pf ? pf.repoStateClean : true,
         moduleOwnershipVerified: true,
-        isolatedMutableDependencies: true,
-        noUnsafeSymlinksOrJunctions: true,
+        isolatedMutableDependencies: pf ? pf.isolatedMutableDependencies : true,
+        noUnsafeSymlinksOrJunctions: pf ? pf.noUnsafeSymlinksOrJunctions : true,
         reservedPortAssigned: true,
         isolatedTestDbSchemaAssigned: true,
-        executionLeaseAcquired: input.executorProviderId !== 'IA-10',
+        executionLeaseAcquired: pf
+          ? pf.executionLeaseAcquired && input.executorProviderId !== 'IA-10'
+          : input.executorProviderId !== 'IA-10',
         acceptanceCriteriaDefined: input.acceptanceCriteria.length > 0,
         checklistAttached: true,
-        independentAuditorAssigned: input.executorAgentId !== input.auditorAgentId,
+        independentAuditorAssigned:
+          (pf ? pf.independentAuditorAssigned : true) &&
+          input.executorAgentId !== input.auditorAgentId,
       },
       approvedSha: null,
       rejectionReason: null,

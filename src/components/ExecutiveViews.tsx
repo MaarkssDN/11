@@ -219,60 +219,231 @@ export const ExecutiveViews: React.FC<ExecutiveViewsProps> = ({
           </div>
         </section>
 
-        {/* Grade de Indicadores Executivos Obrigatórios (Seção 24 — Tabular Numerals, Zero Pill Clutter) */}
+        {/* Grade de Indicadores Executivos Obrigatórios (Seção 24 — Tabular Numerals, Design Tokens Status Colors) */}
         <section aria-label="Indicadores Executivos da Operação">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-3">
             Telemetria Verificada do Centro de Operações
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+            <div className="rounded-xl border border-[var(--b360-border-hairline)] bg-white dark:bg-slate-900 p-4">
               <div className="text-xs text-slate-500 dark:text-slate-400">IAs Oficiais</div>
-              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-slate-50">
+              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-[var(--b360-accent-primary)]">
                 {db.providers.length}
               </div>
               <div className="mt-1 text-xs text-slate-500">IA-01 a IA-10 cadastradas</div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+            <div className="rounded-xl border border-[var(--b360-border-hairline)] bg-white dark:bg-slate-900 p-4">
               <div className="text-xs text-slate-500 dark:text-slate-400">Agentes & Squads</div>
-              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-slate-50">
+              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-[var(--b360-accent-primary)]">
                 {db.agents.length} / {db.squads.length}
               </div>
               <div className="mt-1 text-xs text-slate-500">Astra (00) a Catarina (100)</div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+            <div className="rounded-xl border border-[var(--b360-border-hairline)] bg-white dark:bg-slate-900 p-4">
               <div className="text-xs text-slate-500 dark:text-slate-400">Missões Ativas / Bloq.</div>
-              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-slate-50">
+              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-[var(--b360-status-nominal)]">
                 {activeMissions.length} /{' '}
-                <span className="text-amber-600 dark:text-amber-400">{blockedMissions.length}</span>
+                <span className="text-[var(--b360-status-warning)]">{blockedMissions.length}</span>
               </div>
               <div className="mt-1 text-xs text-slate-500">Preflight & Worktree ativa</div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+            <div className="rounded-xl border border-[var(--b360-border-hairline)] bg-white dark:bg-slate-900 p-4">
               <div className="text-xs text-slate-500 dark:text-slate-400">Ondas Fundacionais</div>
-              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-slate-50">
+              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-[var(--b360-status-nominal)]">
                 {activeWaves.length} / {db.waves.length}
               </div>
               <div className="mt-1 text-xs text-slate-500">Ondas 00 a 19 estruturadas</div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+            <div className="rounded-xl border border-[var(--b360-border-hairline)] bg-white dark:bg-slate-900 p-4">
               <div className="text-xs text-slate-500 dark:text-slate-400">Auditorias Pend. / Repr.</div>
-              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-slate-900 dark:text-slate-50">
+              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-[var(--b360-status-warning)]">
                 {pendingAudits.length} /{' '}
-                <span className="text-red-600 dark:text-red-400">{rejectedAudits.length}</span>
+                <span className="text-[var(--b360-status-critical)]">{rejectedAudits.length}</span>
               </div>
               <div className="mt-1 text-xs text-slate-500">Vinculadas ao SHA auditado</div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+            <div className="rounded-xl border border-[var(--b360-border-hairline)] bg-white dark:bg-slate-900 p-4">
               <div className="text-xs text-slate-500 dark:text-slate-400">Gasto Adicional</div>
-              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-emerald-700 dark:text-emerald-400">
+              <div className="mt-1 text-2xl font-bold font-mono tabular-nums text-[var(--b360-status-nominal)]">
                 R$ 0,00
               </div>
               <div className="mt-1 text-xs text-slate-500">Trava constitucional ativa</div>
+            </div>
+          </div>
+        </section>
+
+        {/* Cards Executivos: Status de Ondas e Consumo por IA (Design Tokens Status Colors) */}
+        <section
+          aria-label="Status de Ondas e Consumo por IA"
+          className="grid grid-cols-1 xl:grid-cols-2 gap-6"
+        >
+          {/* Card 1: Status de Ondas */}
+          <div className="rounded-xl border border-[var(--b360-border-hairline)] bg-white dark:bg-slate-900 p-5 space-y-4">
+            <div className="flex items-center justify-between gap-2 border-b border-[var(--b360-border-hairline)] pb-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  Status de Ondas (Roadmap Oficial 00 a 19)
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Telemetria em tempo real extraída de db.waves com cores de status por design token
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onSelectModule('mod-10')}
+                className="px-2.5 py-1 text-xs font-medium rounded-lg border border-[var(--b360-border-hairline)] hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--b360-accent-primary)] whitespace-nowrap shrink-0"
+              >
+                Gerenciar 20 Ondas
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="rounded-lg border border-[var(--b360-border-hairline)] bg-slate-50/70 dark:bg-slate-950/60 p-3">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">Concluída Fundação</div>
+                <div className="mt-1 text-lg font-bold font-mono tabular-nums text-[var(--b360-status-nominal)]">
+                  {db.waves.filter((w) => w.status === 'CONCLUIDA_FUNDACAO').length}
+                </div>
+              </div>
+              <div className="rounded-lg border border-[var(--b360-border-hairline)] bg-slate-50/70 dark:bg-slate-950/60 p-3">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">Em Andamento</div>
+                <div className="mt-1 text-lg font-bold font-mono tabular-nums text-[var(--b360-accent-primary)]">
+                  {db.waves.filter((w) => w.status === 'EM_ANDAMENTO').length}
+                </div>
+              </div>
+              <div className="rounded-lg border border-[var(--b360-border-hairline)] bg-slate-50/70 dark:bg-slate-950/60 p-3">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">Planejadas</div>
+                <div className="mt-1 text-lg font-bold font-mono tabular-nums text-[var(--b360-status-warning)]">
+                  {db.waves.filter((w) => w.status === 'PLANEJADA').length}
+                </div>
+              </div>
+              <div className="rounded-lg border border-[var(--b360-border-hairline)] bg-slate-50/70 dark:bg-slate-950/60 p-3">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">Bloq. Dependência</div>
+                <div className="mt-1 text-lg font-bold font-mono tabular-nums text-[var(--b360-status-critical)]">
+                  {db.waves.filter((w) => w.status === 'BLOQUEADA_DEPENDENCIA').length}
+                </div>
+              </div>
+            </div>
+
+            <div className="divide-y divide-slate-200 dark:divide-slate-800 max-h-56 overflow-y-auto pr-1">
+              {db.waves.slice(0, 8).map((wave) => {
+                const waveColorClass =
+                  wave.status === 'CONCLUIDA_FUNDACAO'
+                    ? 'text-[var(--b360-status-nominal)]'
+                    : wave.status === 'EM_ANDAMENTO'
+                    ? 'text-[var(--b360-accent-primary)]'
+                    : wave.status === 'BLOQUEADA_DEPENDENCIA'
+                    ? 'text-[var(--b360-status-critical)]'
+                    : 'text-[var(--b360-status-warning)]';
+                return (
+                  <div
+                    key={wave.id}
+                    className="py-2 flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
+                        {wave.id}
+                      </span>{' '}
+                      <span className="text-slate-600 dark:text-slate-300 truncate">
+                        · {wave.title}
+                      </span>
+                    </div>
+                    <span className={`font-mono font-semibold shrink-0 ${waveColorClass}`}>
+                      {wave.status}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card 2: Consumo por IA */}
+          <div className="rounded-xl border border-[var(--b360-border-hairline)] bg-white dark:bg-slate-900 p-5 space-y-4">
+            <div className="flex items-center justify-between gap-2 border-b border-[var(--b360-border-hairline)] pb-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  Consumo por IA & Quotas de Assinaturas (IA-01 a IA-10)
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Tráfego Inbox/Outbox, limite contratual e conformidade R$ 0,00 extraídos de db.providers
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onSelectModule('mod-29')}
+                className="px-2.5 py-1 text-xs font-medium rounded-lg border border-[var(--b360-border-hairline)] hover:bg-slate-100 dark:hover:bg-slate-800 text-[var(--b360-accent-primary)] whitespace-nowrap shrink-0"
+              >
+                Política R$ 0,00
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="rounded-lg border border-[var(--b360-border-hairline)] bg-slate-50/70 dark:bg-slate-950/60 p-3">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">Mensagens Processadas</div>
+                <div className="mt-1 text-lg font-bold font-mono tabular-nums text-[var(--b360-accent-primary)]">
+                  {db.providers.reduce((acc, p) => acc + p.inboxCount + p.outboxCount, 0)}
+                </div>
+              </div>
+              <div className="rounded-lg border border-[var(--b360-border-hairline)] bg-slate-50/70 dark:bg-slate-950/60 p-3">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">Assinaturas Ativas</div>
+                <div className="mt-1 text-lg font-bold font-mono tabular-nums text-[var(--b360-status-nominal)]">
+                  {
+                    db.subscriptions.filter(
+                      (s) =>
+                        s.quotaStatus === 'DISPONIVEL' ||
+                        s.quotaStatus === 'MONITORAMENTO_MANUAL'
+                    ).length
+                  }{' '}
+                  / {db.subscriptions.length}
+                </div>
+              </div>
+              <div className="rounded-lg border border-[var(--b360-border-hairline)] bg-slate-50/70 dark:bg-slate-950/60 p-3">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">Custo Extra Acumulado</div>
+                <div className="mt-1 text-lg font-bold font-mono tabular-nums text-[var(--b360-status-nominal)]">
+                  R$ 0,00
+                </div>
+              </div>
+            </div>
+
+            <div className="divide-y divide-slate-200 dark:divide-slate-800 max-h-56 overflow-y-auto pr-1">
+              {db.providers.map((prov) => {
+                const totalMessages = prov.inboxCount + prov.outboxCount;
+                const statusColorClass =
+                  prov.connectionStatus === 'CONECTADO_API_LOCAL' ||
+                  prov.connectionStatus === 'MODO_ASSISTIDO_HUMANO'
+                    ? 'text-[var(--b360-status-nominal)]'
+                    : prov.connectionStatus === 'BLOQUEADO_VERIFICACAO_PENDENTE'
+                    ? 'text-[var(--b360-status-warning)]'
+                    : 'text-[var(--b360-status-critical)]';
+
+                return (
+                  <div
+                    key={prov.id}
+                    className="py-2 flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-mono font-semibold text-slate-900 dark:text-slate-100 truncate">
+                        {prov.id} · {prov.name}
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        {prov.subscriptionSummary} · {prov.consumptionLimitNote}
+                      </div>
+                    </div>
+                    <div className="text-right font-mono tabular-nums shrink-0">
+                      <div className={`font-semibold ${statusColorClass}`}>
+                        IN:{prov.inboxCount} / OUT:{prov.outboxCount} ({totalMessages} ops)
+                      </div>
+                      <div className="text-[11px] text-[var(--b360-status-nominal)]">
+                        R$ 0,00 · Quota OK
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
