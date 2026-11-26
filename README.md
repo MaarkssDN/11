@@ -1,11 +1,37 @@
-<div align="center">
+# Birthub 360 — AI Operations Center (B360-AOC)
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Plataforma empresarial de comando, comunicação, coordenação, automação, auditoria, homologação e integração multiagentes do ecossistema **Birthub 360**.
 
-  <h1>Built with AI Studio</h2>
+> **Independência Estrutural**: Este projeto (`Birthub-360-Operations`) é independente do produto principal `https://github.com/MaarkssDN/Birthub-360`, que permanece em modo seguro somente leitura.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 1. Visão Geral e Arquitetura
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+- **Frontend**: React 19 + TypeScript (`strict: true`) + Vite + Tailwind CSS v4 + Lucide Icons + Design Tokens centralizados preparados para o brandbook oficial do Birthub 360.
+- **Backend & Contratos**: Express (`server.ts`) com contratos compartilhados e validação Zod (`src/shared/contracts.ts`).
+- **Motor de Domínio Desacoplado**: Regras puras em `src/domain/operationsEngine.ts` cobertas por testes unitários reais (`node:test`).
+- **Persistência**: Armazenamento persistente local (`data/b360-aoc-db.json`) e schema relacional completo com **45 tabelas** compatível com **Cloudflare D1** em `migrations/0001_initial_schema.sql`.
 
-</div>
+## 2. Instruções de Execução
+
+```bash
+# Instalar dependências
+npm install
+
+# Executar verificação de tipos TypeScript em modo strict
+npm run lint
+
+# Executar suíte de testes unitários reais do motor de operações
+npx --yes tsx --test src/domain/operationsEngine.test.ts
+
+# Executar build de produção
+npm run build
+
+# Iniciar servidor full-stack na porta 3000
+npm run dev
+```
+
+## 3. Instruções de Implantação Futura (Cloudflare Pages, Workers e D1)
+
+1. Criar banco D1: `wrangler d1 create b360-aoc-db`
+2. Aplicar a migration das 45 entidades: `wrangler d1 execute b360-aoc-db --file=./migrations/0001_initial_schema.sql`
+3. Configurar variáveis sem segredos no Git conforme `.env.example`.
