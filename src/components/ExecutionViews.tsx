@@ -182,12 +182,12 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
           <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Seções 12, 14 e 15 · Máquina de Estados de 23 Etapas · Isolamento Obrigatório & Preflight
           </div>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">
+          <h1 className="mt-1 text-2xl font-bold text-blue-700 dark:text-sky-400">
             {activeModuleId === 'mod-09' &&
-              '09. Central de Missões & Máquina de Estados Operacional (23 Etapas)'}
+              'Central de Missões & Máquina de Estados Operacional (23 Etapas)'}
             {activeModuleId === 'mod-15' &&
-              '15. Gerenciador de Dependências entre Missões & Fiscalização de Colisões'}
-            {activeModuleId === 'mod-16' && '16. Kanban Operacional Sincronizado por Etapa'}
+              'Gerenciador de Dependências entre Missões & Fiscalização de Colisões'}
+            {activeModuleId === 'mod-16' && 'Kanban Operacional Sincronizado por Etapa'}
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Cada missão exige worktree exclusiva, branch exclusiva, SHA base, ownership de módulos,
@@ -204,7 +204,7 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
                 <div className="text-xs font-mono text-blue-600 dark:text-blue-400 font-semibold">
                   MISSÃO SELECIONADA · {selectedMission.code} · {selectedMission.waveId}
                 </div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                <h2 className="text-lg font-bold text-blue-700 dark:text-sky-400 mt-0.5">
                   {selectedMission.title}
                 </h2>
                 <div className="text-xs font-mono text-slate-500 mt-1">
@@ -343,7 +343,7 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <h2 className="text-sm font-semibold text-blue-700 dark:text-sky-400">
                 Catálogo de Missões Registradas (Clique para selecionar e operar a máquina de estados)
               </h2>
             </div>
@@ -392,7 +392,7 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
             className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3"
           >
             <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              <h3 className="text-sm font-bold text-blue-700 dark:text-sky-400">
                 Criar Nova Missão Isolada (Com Preflight & Validação Zod)
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
@@ -731,10 +731,10 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
           <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Seção 27 · Roadmap Oficial de Construção em 20 Ondas (Onda 00 a Onda 19)
           </div>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">
+          <h1 className="mt-1 text-2xl font-bold text-blue-700 dark:text-sky-400">
             {activeModuleId === 'mod-10'
-              ? '10. Gerenciador de Ondas (Ondas 00 a 19 — Escopo, Critérios de Aceite, Riscos e Evidências)'
-              : '17. Calendário de Operações & Janelas de Execução'}
+              ? 'Gerenciador de Ondas (Ondas 00 a 19 — Escopo, Critérios de Aceite, Riscos e Evidências)'
+              : 'Calendário de Operações & Janelas de Execução'}
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Cada onda possui escopo delimitado, critérios de aceite verificáveis, dependências,
@@ -835,10 +835,10 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
     return (
       <div className="space-y-6">
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+          <h1 className="text-2xl font-bold text-blue-700 dark:text-sky-400">
             {activeModuleId === 'mod-11'
-              ? '11. Prompt Studio — Compilador de Prompts Constitucionais por Onda'
-              : '12. Biblioteca de Prompts Versionados'}
+              ? 'Prompt Studio — Compilador de Prompts Constitucionais por Onda'
+              : 'Biblioteca de Prompts Versionados'}
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Todo prompt gerado injeta automaticamente as restrições permanentes: gasto adicional R$
@@ -851,7 +851,7 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
             onSubmit={handleSavePrompt}
             className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3"
           >
-            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-sm font-bold text-blue-700 dark:text-sky-400">
               Compilar Novo Prompt Operacional
             </h2>
 
@@ -997,7 +997,7 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
                     Alvo: {prm.targetProviderId} / {prm.targetSquadId}
                   </span>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                <h3 className="text-sm font-bold text-blue-700 dark:text-sky-400">
                   {prm.title}
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400">{prm.objective}</p>
@@ -1018,14 +1018,14 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
   return (
     <div className="space-y-8">
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-          {activeModuleId === 'mod-13' && '13. Gerenciador de Checklists Persistentes'}
-          {activeModuleId === 'mod-14' && '14. Central de Handoffs entre IAs, Devin e Catarina'}
+        <h1 className="text-2xl font-bold text-blue-700 dark:text-sky-400">
+          {activeModuleId === 'mod-13' && 'Gerenciador de Checklists Persistentes'}
+          {activeModuleId === 'mod-14' && 'Central de Handoffs entre IAs, Devin e Catarina'}
           {activeModuleId === 'mod-18' &&
-            '18. Motor de Automação Independente de Sessão de Chat (Filas, Leases e Heartbeats)'}
-          {activeModuleId === 'mod-19' && '19. Central de Notificações Operacionais'}
+            'Motor de Automação Independente de Sessão de Chat (Filas, Leases e Heartbeats)'}
+          {activeModuleId === 'mod-19' && 'Central de Notificações Operacionais'}
           {activeModuleId === 'mod-20' &&
-            '20. Central de Aprovações Humanas (Exclusivo Orquestrador Humano)'}
+            'Central de Aprovações Humanas (Exclusivo Orquestrador Humano)'}
         </h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           Automação persistente com suporte a ambientes locais e remotos. Se o computador Windows
@@ -1047,7 +1047,7 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
               </span>
               <span>{chk.category}</span>
             </div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{chk.title}</h2>
+            <h2 className="text-sm font-bold text-blue-700 dark:text-sky-400">{chk.title}</h2>
             <div className="space-y-2 pt-2">
               {chk.items.map((item) => (
                 <label
@@ -1087,7 +1087,7 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <h2 className="text-sm font-semibold text-blue-700 dark:text-sky-400">
               Fila Persistente do Motor de Automação (Leases, Heartbeats e Prevenção de Duplicidade)
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">

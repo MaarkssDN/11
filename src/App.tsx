@@ -5,7 +5,6 @@ import {
   CheckSquare,
   ChevronLeft,
   ChevronRight,
-  Command,
   Cpu,
   GitBranch,
   LayoutDashboard,
@@ -26,17 +25,25 @@ import {
   OFFICIAL_40_MODULES,
   SendMessageInput,
 } from './shared/contracts';
+import { apiFetch } from './mocks/browser';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { ExecutiveViews } from './components/ExecutiveViews';
 import { ExecutionViews } from './components/ExecutionViews';
 import { LocalAndGovernanceViews } from './components/LocalAndGovernanceViews';
 
 const CATEGORY_LABELS: Record<ModuleCategory, string> = {
-  COMANDO_E_GESTAO: '1. Comando e Gestão (01-10)',
-  PLANEJAMENTO_E_EXECUCAO: '2. Planejamento e Execução (11-20)',
-  OPERACAO_LOCAL_E_QUALIDADE: '3. Operação Local e Qualidade (21-30)',
-  INTEGRACAO_SEGURANCA_E_CONHECIMENTO: '4. Integração, Segurança e Conhecimento (31-40)',
+  COMANDO_E_GESTAO: 'Comando e gestão',
+  PLANEJAMENTO_E_EXECUCAO: 'Planejamento e execução',
+  OPERACAO_LOCAL_E_QUALIDADE: 'Operação local e qualidade',
+  INTEGRACAO_SEGURANCA_E_CONHECIMENTO: 'Integração, segurança e conhecimento',
 };
+
+const CATEGORY_ORDER: ModuleCategory[] = [
+  'COMANDO_E_GESTAO',
+  'PLANEJAMENTO_E_EXECUCAO',
+  'OPERACAO_LOCAL_E_QUALIDADE',
+  'INTEGRACAO_SEGURANCA_E_CONHECIMENTO',
+];
 
 const EXECUTIVE_MODULE_IDS = new Set([
   'mod-01',
@@ -64,6 +71,52 @@ const EXECUTION_MODULE_IDS = new Set([
   'mod-20',
 ]);
 
+function getModuleIcon(moduleId: string) {
+  switch (moduleId) {
+    case 'mod-01':
+      return Layers;
+    case 'mod-02':
+      return LayoutDashboard;
+    case 'mod-03':
+      return MessageSquare;
+    case 'mod-04':
+    case 'mod-05':
+      return Cpu;
+    case 'mod-06':
+    case 'mod-07':
+    case 'mod-08':
+      return Users;
+    case 'mod-09':
+    case 'mod-15':
+    case 'mod-16':
+    case 'mod-18':
+      return Terminal;
+    case 'mod-11':
+    case 'mod-12':
+    case 'mod-35':
+      return BookOpen;
+    case 'mod-13':
+    case 'mod-20':
+    case 'mod-23':
+    case 'mod-24':
+    case 'mod-30':
+      return CheckSquare;
+    case 'mod-21':
+    case 'mod-25':
+    case 'mod-27':
+    case 'mod-28':
+    case 'mod-29':
+      return Monitor;
+    case 'mod-26':
+    case 'mod-31':
+    case 'mod-32':
+    case 'mod-33':
+      return GitBranch;
+    default:
+      return Shield;
+  }
+}
+
 export default function App() {
   const [db, setDb] = useState<B360DatabaseState | null>(null);
   const [adapterDiagnostics, setAdapterDiagnostics] = useState<any[]>([]);
@@ -78,7 +131,7 @@ export default function App() {
 
   const fetchState = useCallback(async () => {
     try {
-      const res = await fetch('/api/state');
+      const res = await apiFetch('/api/state');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setDb(data.db);
@@ -118,7 +171,7 @@ export default function App() {
   }, []);
 
   const handleToggleKillSwitch = async (suspend: boolean, reason: string) => {
-    const res = await fetch('/api/governance/kill-switch', {
+    const res = await apiFetch('/api/governance/kill-switch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ suspend, reason }),
@@ -129,7 +182,7 @@ export default function App() {
   };
 
   const handleCreateMission = async (input: CreateMissionInput) => {
-    const res = await fetch('/api/missions', {
+    const res = await apiFetch('/api/missions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
@@ -147,7 +200,7 @@ export default function App() {
     action: 'EXECUTAR_PREFLIGHT' | 'AVANCAR_ETAPA' | 'REPROVAR_ENTREGA' | 'INVALIDAR_POR_NOVO_COMMIT',
     newCommitSha?: string
   ) => {
-    const res = await fetch(`/api/missions/${missionId}/transition`, {
+    const res = await apiFetch(`/api/missions/${missionId}/transition`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, newCommitSha }),
@@ -161,14 +214,14 @@ export default function App() {
   };
 
   const handleToggleChecklistItem = async (checklistId: string, itemId: string) => {
-    await fetch(`/api/checklists/${checklistId}/items/${itemId}/toggle`, {
+    await apiFetch(`/api/checklists/${checklistId}/items/${itemId}/toggle`, {
       method: 'POST',
     });
     await fetchState();
   };
 
   const handleCreatePrompt = async (payload: any) => {
-    const res = await fetch('/api/prompts', {
+    const res = await apiFetch('/api/prompts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -180,7 +233,7 @@ export default function App() {
   };
 
   const handleSendMessage = async (input: SendMessageInput) => {
-    const res = await fetch('/api/messages', {
+    const res = await apiFetch('/api/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
@@ -192,7 +245,7 @@ export default function App() {
   };
 
   const handleImportConversation = async (payload: { fileName: string; rawText: string }) => {
-    const res = await fetch('/api/conversations/import', {
+    const res = await apiFetch('/api/conversations/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -204,7 +257,7 @@ export default function App() {
   };
 
   const handleSubmitAuditVerdict = async (auditId: string, payload: any) => {
-    const res = await fetch(`/api/audits/${auditId}/verdict`, {
+    const res = await apiFetch(`/api/audits/${auditId}/verdict`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -216,7 +269,7 @@ export default function App() {
   };
 
   const handleCreateMemory = async (payload: any) => {
-    const res = await fetch('/api/memories', {
+    const res = await apiFetch('/api/memories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -229,13 +282,13 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-6">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 p-6">
         <div className="max-w-md w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-3">
-          <div className="text-xs font-mono text-blue-600 dark:text-blue-400">
+          <div className="text-xs font-mono text-blue-600 dark:text-sky-400">
             B360-AOC · INICIALIZANDO CENTRO DE COMANDO
           </div>
-          <div className="text-base font-bold">
-            Carregando os 40 módulos, 10 IAs oficiais e estado persistente...
+          <div className="text-base font-bold text-blue-700 dark:text-sky-400">
+            Carregando módulos operacionais, 10 IAs oficiais e estado persistente...
           </div>
           <div className="h-2 w-full rounded bg-slate-100 dark:bg-slate-800 overflow-hidden">
             <div className="h-full w-2/3 bg-blue-600" />
@@ -247,7 +300,7 @@ export default function App() {
 
   if (loadError || !db) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-6">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 p-6">
         <div className="max-w-md w-full rounded-xl border border-red-300 dark:border-red-900 bg-white dark:bg-slate-900 p-6 space-y-4">
           <div className="text-sm font-bold text-red-600 dark:text-red-400">
             Falha de Conexão com o Servidor B360-AOC
@@ -256,7 +309,7 @@ export default function App() {
           <button
             type="button"
             onClick={fetchState}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold"
+            className="px-4 py-2 rounded-lg bg-blue-600 text-sky-100 text-xs font-semibold"
           >
             Tentar Novamente
           </button>
@@ -268,30 +321,28 @@ export default function App() {
   const currentModule =
     OFFICIAL_40_MODULES.find((m) => m.id === activeModuleId) || OFFICIAL_40_MODULES[1];
 
-  const sidebarModules =
-    activeCategoryTab === 'TODOS'
-      ? OFFICIAL_40_MODULES
-      : OFFICIAL_40_MODULES.filter((m) => m.category === activeCategoryTab);
+  const categoriesToDisplay =
+    activeCategoryTab === 'TODOS' ? CATEGORY_ORDER : [activeCategoryTab];
 
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      {/* Sidebar Corporativa Recolhível com todos os 40 Módulos Obrigatórios */}
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300">
+      {/* Sidebar Corporativa Recolhível com todos os Módulos em Ordem Oficial (Sem numeração 1-40) */}
       <aside
-        aria-label="Navegação Principal dos 40 Módulos B360-AOC"
+        aria-label="Navegação Principal dos Módulos B360-AOC"
         className={`${
           sidebarCollapsed ? 'w-16' : 'w-72'
         } shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between transition-all`}
       >
         {/* Identidade B360-AOC */}
-        <div>
-          <div className="h-16 px-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="h-16 px-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
             {!sidebarCollapsed && (
               <div className="min-w-0">
-                <div className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100 truncate">
+                <div className="text-sm font-bold tracking-tight text-blue-700 dark:text-sky-400 truncate">
                   BIRTHUB 360 · AOC
                 </div>
-                <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate">
-                  B360-AOC · 40 Módulos
+                <div className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 truncate">
+                  B360-AOC · AI Operations Center
                 </div>
               </div>
             )}
@@ -309,62 +360,19 @@ export default function App() {
             </button>
           </div>
 
-          {/* Atalhos Principais de Primeira Entrega */}
+          {/* Filtro por Domínio + Lista Integral Ordenada dos Módulos (Sem Numeração 1 a 40) */}
           {!sidebarCollapsed && (
-            <div className="p-3 border-b border-slate-200 dark:border-slate-800 space-y-1">
-              <div className="px-2 pb-1 text-[11px] font-mono text-slate-500">
-                CENTRAIS PRIORITÁRIAS
-              </div>
-              {[
-                { id: 'mod-02', label: '02. Dashboard Executivo', icon: LayoutDashboard },
-                { id: 'mod-01', label: '01. Global Command Center', icon: Layers },
-                { id: 'mod-03', label: '03. Conversas & Import Drive', icon: MessageSquare },
-                { id: 'mod-04', label: '04. 10 IAs & Assinaturas', icon: Cpu },
-                { id: 'mod-06', label: '06. Agentes (00-100) & Squads', icon: Users },
-                { id: 'mod-09', label: '09. Missões (23 Etapas)', icon: Terminal },
-                { id: 'mod-10', label: '10. Gerenciador de 20 Ondas', icon: Layers },
-                { id: 'mod-11', label: '11. Prompt Studio', icon: BookOpen },
-                { id: 'mod-13', label: '13. Checklists & Automação', icon: CheckSquare },
-                { id: 'mod-21', label: '21. Devin Command (Windows)', icon: Monitor },
-                { id: 'mod-22', label: '22. Catarina Command (100)', icon: Shield },
-                { id: 'mod-23', label: '23. Auditoria Independente SHA', icon: CheckSquare },
-                { id: 'mod-31', label: '31. Git Integration (Read-Only)', icon: GitBranch },
-                { id: 'mod-34', label: '34. Memória (10 Níveis) & Gov.', icon: Shield },
-              ].map((item) => {
-                const Icon = item.icon;
-                const active = activeModuleId === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setActiveModuleId(item.id)}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left ${
-                      active
-                        ? 'bg-blue-600 text-white'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Filtro por Domínio dos 40 Módulos */}
-          {!sidebarCollapsed && (
-            <div className="p-3">
-              <div className="px-2 pb-1.5 text-[11px] font-mono text-slate-500">
-                ÍNDICE INTEGRAL DOS 40 MÓDULOS
+            <div className="p-3 flex-1 flex flex-col min-h-0">
+              <div className="px-2 pb-1.5 text-[11px] font-mono font-semibold text-blue-700 dark:text-sky-400">
+                MÓDULOS DA PLATAFORMA
               </div>
               <select
-                aria-label="Filtrar os 40 módulos por domínio"
+                aria-label="Filtrar módulos por domínio"
                 value={activeCategoryTab}
                 onChange={(e) => setActiveCategoryTab(e.target.value as any)}
-                className="w-full mb-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-100"
+                className="w-full mb-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2.5 py-1.5 text-xs text-blue-700 dark:text-sky-300 font-medium shrink-0"
               >
-                <option value="TODOS">Todos os 40 Módulos</option>
+                <option value="TODOS">Todos os Módulos</option>
                 <option value="COMANDO_E_GESTAO">{CATEGORY_LABELS.COMANDO_E_GESTAO}</option>
                 <option value="PLANEJAMENTO_E_EXECUCAO">
                   {CATEGORY_LABELS.PLANEJAMENTO_E_EXECUCAO}
@@ -377,29 +385,49 @@ export default function App() {
                 </option>
               </select>
 
-              <div className="max-h-64 overflow-y-auto space-y-0.5 pr-1">
-                {sidebarModules.map((mod) => (
-                  <button
-                    key={mod.id}
-                    type="button"
-                    onClick={() => setActiveModuleId(mod.id)}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-colors truncate ${
-                      activeModuleId === mod.id
-                        ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    {String(mod.number).padStart(2, '0')}. {mod.shortTitle}
-                  </button>
-                ))}
-              </div>
+              <nav
+                aria-label="Lista ordenada de módulos"
+                className="flex-1 overflow-y-auto space-y-4 pr-1 max-h-[calc(100vh-14rem)]"
+              >
+                {categoriesToDisplay.map((categoryKey) => {
+                  const categoryModules = OFFICIAL_40_MODULES.filter(
+                    (m) => m.category === categoryKey
+                  );
+                  return (
+                    <div key={categoryKey} className="space-y-1">
+                      <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                        {CATEGORY_LABELS[categoryKey]}
+                      </div>
+                      {categoryModules.map((mod) => {
+                        const Icon = getModuleIcon(mod.id);
+                        const active = activeModuleId === mod.id;
+                        return (
+                          <button
+                            key={mod.id}
+                            type="button"
+                            onClick={() => setActiveModuleId(mod.id)}
+                            className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left ${
+                              active
+                                ? 'bg-blue-600/15 dark:bg-sky-500/20 text-blue-700 dark:text-sky-300 border border-blue-500/30 font-semibold'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-700 dark:hover:text-sky-300'
+                            }`}
+                          >
+                            <Icon className="w-3.5 h-3.5 shrink-0 text-blue-600 dark:text-sky-400" />
+                            <span className="truncate">{mod.title}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </nav>
             </div>
           )}
         </div>
 
         {/* Rodapé Constitucional da Sidebar */}
         {!sidebarCollapsed && (
-          <div className="p-3 border-t border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-500 space-y-1">
+          <div className="p-3 border-t border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-500 space-y-1 shrink-0">
             <div>Política Adicional: R$ 0,00</div>
             <div>Git Principal: Somente Leitura</div>
             <div>Devin Windows: Desabilitado</div>
@@ -413,13 +441,13 @@ export default function App() {
         <header className="h-16 px-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between gap-8">
           {/* Zona 1: Breadcrumb Contextual */}
           <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap shrink-0">
-            <span className="font-bold text-slate-900 dark:text-slate-100">B360-AOC</span>
+            <span className="font-bold text-blue-700 dark:text-sky-400">B360-AOC</span>
             <span aria-hidden="true">/</span>
-            <span className="text-slate-500">
-              Módulo {String(currentModule.number).padStart(2, '0')}
+            <span className="text-indigo-600 dark:text-indigo-400">
+              {CATEGORY_LABELS[currentModule.category]}
             </span>
             <span aria-hidden="true">/</span>
-            <span className="font-semibold text-blue-600 dark:text-blue-400 truncate max-w-xs">
+            <span className="font-semibold text-blue-600 dark:text-sky-400 truncate max-w-xs">
               {currentModule.title}
             </span>
           </div>
@@ -432,28 +460,28 @@ export default function App() {
             <button
               type="button"
               onClick={() => setActiveModuleId('mod-02')}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap shrink-0"
+              className="hover:text-blue-600 dark:hover:text-sky-400 transition-colors whitespace-nowrap shrink-0"
             >
               Comando
             </button>
             <button
               type="button"
               onClick={() => setActiveModuleId('mod-09')}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap shrink-0"
+              className="hover:text-blue-600 dark:hover:text-sky-400 transition-colors whitespace-nowrap shrink-0"
             >
               Missões
             </button>
             <button
               type="button"
               onClick={() => setActiveModuleId('mod-23')}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap shrink-0"
+              className="hover:text-blue-600 dark:hover:text-sky-400 transition-colors whitespace-nowrap shrink-0"
             >
               Auditoria
             </button>
             <button
               type="button"
               onClick={() => setActiveModuleId('mod-34')}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap shrink-0"
+              className="hover:text-blue-600 dark:hover:text-sky-400 transition-colors whitespace-nowrap shrink-0"
             >
               Governança
             </button>
@@ -464,17 +492,17 @@ export default function App() {
             <button
               type="button"
               onClick={() => setCommandPaletteOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs text-slate-700 dark:text-slate-300 transition-colors whitespace-nowrap shrink-0"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs text-blue-700 dark:text-sky-400 transition-colors whitespace-nowrap shrink-0"
               aria-label="Abrir Command Palette e Pesquisa Global"
             >
-              <Search className="w-3.5 h-3.5 text-slate-400" />
+              <Search className="w-3.5 h-3.5 text-blue-500 dark:text-sky-400" />
               <span>Command Palette (Ctrl+K)</span>
             </button>
 
             <button
               type="button"
               onClick={() => setIsDark((d) => !d)}
-              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors shrink-0"
+              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-700 dark:text-sky-400 transition-colors shrink-0"
               aria-label={isDark ? 'Alternar para Modo Claro' : 'Alternar para Modo Escuro'}
             >
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -486,10 +514,10 @@ export default function App() {
         {db.governance.globalAutomationSuspended && (
           <div
             role="alert"
-            className="bg-red-600 text-white px-6 py-2.5 text-xs font-medium flex items-center justify-between"
+            className="bg-red-950/90 text-red-200 border-b border-red-800 px-6 py-2.5 text-xs font-medium flex items-center justify-between"
           >
             <span className="flex items-center gap-2">
-              <AlertOctagon className="w-4 h-4 shrink-0" />
+              <AlertOctagon className="w-4 h-4 shrink-0 text-red-400" />
               SUSPENSÃO EMERGENCIAL GLOBAL ATIVA (KILL SWITCH): Todas as filas de automação e
               novas transições estão pausadas. Motivo: {db.governance.emergencyKillSwitchReason}
             </span>
@@ -498,7 +526,7 @@ export default function App() {
               onClick={() =>
                 handleToggleKillSwitch(false, 'Retomada autorizada pelo Orquestrador Humano')
               }
-              className="px-3 py-1 rounded bg-white text-red-700 font-bold text-xs whitespace-nowrap"
+              className="px-3 py-1 rounded bg-red-800 text-amber-200 font-bold text-xs whitespace-nowrap"
             >
               Retomar Operação
             </button>
@@ -538,11 +566,11 @@ export default function App() {
 
         {/* Footer Discreto (Sem Tickers Falsos de Telemetria) */}
         <footer className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
+          <div className="text-blue-700 dark:text-sky-400 font-medium">
             Birthub 360 — AI Operations Center (B360-AOC) · Projeto Independente do Produto
             Principal Birthub 360
           </div>
-          <div className="font-mono">
+          <div className="font-mono text-emerald-700 dark:text-emerald-400">
             Orquestrador Humano: Autoridade Máxima · Gasto Adicional: R$ 0,00
           </div>
         </footer>

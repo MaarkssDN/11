@@ -203,8 +203,8 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
           <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Seções 8 e 9 · Barramento Corporativo Multi-IA & Importador Idempotente Google Drive
           </div>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">
-            03. Central de Conversas entre IAs & Diagnóstico de Históricos Importados
+          <h1 className="mt-1 text-2xl font-bold text-blue-700 dark:text-sky-400">
+            Central de Conversas entre IAs & Diagnóstico de Históricos Importados
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Regra Constitucional: Nenhuma mensagem produzida por IA pode ser atribuída ao
@@ -217,7 +217,7 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
           {/* Feed Cronológico de Mensagens Entre IAs */}
           <div className="xl:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <h2 className="text-sm font-semibold text-blue-700 dark:text-sky-400">
                 Histórico Cronológico Verificado ({db.messages.length} mensagens)
               </h2>
               <span className="text-xs font-mono text-slate-500">Anti-Duplicidade FNV-1a Ativo</span>
@@ -260,7 +260,7 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
             onSubmit={handleSend}
             className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3"
           >
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            <h3 className="text-sm font-bold text-blue-700 dark:text-sky-400">
               Transmitir Mensagem / Handoff no Barramento
             </h3>
 
@@ -384,7 +384,7 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
         {/* Importador Idempotente das Conversas Existentes (Seção 9 — 15 itens obrigatórios) */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-5">
           <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-base font-bold text-blue-700 dark:text-sky-400">
               Importador Idempotente de Conversas Históricas (Google Drive: CONVERSAS ENTRE MARCELO E IAS)
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -508,15 +508,15 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
             <span>REGRA CONSTITUCIONAL SEÇÃO 16 · OPERAÇÃO LOCAL WINDOWS (DEVIN IA-10)</span>
             <span>ESTADO: INTEGRAÇÃO DESABILITADA ATÉ VERIFICAÇÃO</span>
           </div>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">
+          <h1 className="mt-1 text-2xl font-bold text-blue-700 dark:text-sky-400">
             {activeModuleId === 'mod-21' &&
-              '21. Devin Command Center — Operação Local Windows (C: e D:)'}
-            {activeModuleId === 'mod-25' && '25. Gerenciador de Worktrees Isoladas'}
+              'Devin Command Center — Operação Local Windows (C: e D:)'}
+            {activeModuleId === 'mod-25' && 'Gerenciador de Worktrees Isoladas'}
             {activeModuleId === 'mod-27' &&
-              '27. Gerenciador de Dependências Mutáveis (Proibição de Symlinks/Junctions)'}
+              'Gerenciador de Dependências Mutáveis (Proibição de Symlinks/Junctions)'}
             {activeModuleId === 'mod-28' &&
-              '28. Gerenciador de Ambientes, Portas Reservadas e Bancos de Teste'}
-            {activeModuleId === 'mod-29' && '29. Monitoramento de Infraestrutura Híbrida'}
+              'Gerenciador de Ambientes, Portas Reservadas e Bancos de Teste'}
+            {activeModuleId === 'mod-29' && 'Monitoramento de Infraestrutura Híbrida'}
           </h1>
           <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
             Em cumprimento estrito à Seção 16: &ldquo;A integração deverá permanecer desabilitada
@@ -566,7 +566,7 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
         {/* Tabela de Worktrees, Portas e Dependências Isoladas por Missão */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <h2 className="text-sm font-semibold text-blue-700 dark:text-sky-400">
               Mapa de Isolamento de Worktrees, Branches, Diretórios node_modules, Portas e Leases (Seção 14)
             </h2>
           </div>
@@ -629,8 +629,8 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
           <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Seção 17 · Catarina (Agente 100) e Squad de Especialistas
           </div>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">
-            22. Catarina Command Center — Mobilização Seletiva por Domínio & Prevenção de Conflitos
+          <h1 className="mt-1 text-2xl font-bold text-blue-700 dark:text-sky-400">
+            Catarina Command Center — Mobilização Seletiva por Domínio & Prevenção de Conflitos
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Regra Constitucional: &ldquo;Catarina não deverá mobilizar todos os especialistas
@@ -640,7 +640,7 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
         </div>
 
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-4">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+          <h2 className="text-sm font-bold text-blue-700 dark:text-sky-400">
             Simulador e Seletor Cirúrgico de Especialistas da Catarina (Agente 100)
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -743,12 +743,12 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
           <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Seções 9, 13 e 18 · Proibição de Autoaprovação · Vínculo Obrigatório ao SHA · Testes Reais
           </div>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">
+          <h1 className="mt-1 text-2xl font-bold text-blue-700 dark:text-sky-400">
             {activeModuleId === 'mod-23' &&
-              '23. Central de Auditoria Independente (Vinculada ao SHA Auditado)'}
-            {activeModuleId === 'mod-24' && '24. Central de Homologação de Entregas da Nuvem'}
+              'Central de Auditoria Independente (Vinculada ao SHA Auditado)'}
+            {activeModuleId === 'mod-24' && 'Central de Homologação de Entregas da Nuvem'}
             {activeModuleId === 'mod-30' &&
-              '30. Central de Testes e Quality Gates (Nunca Declarar Teste Não Executado como Aprovado)'}
+              'Central de Testes e Quality Gates (Nunca Declarar Teste Não Executado como Aprovado)'}
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Diferenciação obrigatória entre Falha de Produto, Falha Ambiental e Limitação de
@@ -782,7 +782,7 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
 
               {/* Tabela de Testes Executados vs Não Executados */}
               <div>
-                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-2">
+                <h3 className="text-xs font-bold text-blue-700 dark:text-sky-400 mb-2">
                   Verificação de Testes Executados e Códigos de Saída (Seção 13 e 18):
                 </h3>
                 <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
@@ -825,7 +825,7 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
 
               {/* Achados Classificados (Falha de Produto vs Ambiental vs Limitação de Evidência) */}
               <div>
-                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-2">
+                <h3 className="text-xs font-bold text-blue-700 dark:text-sky-400 mb-2">
                   Achados de Auditoria Classificados:
                 </h3>
                 {primaryAudit.findings.map((f) => (
@@ -849,7 +849,7 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
               onSubmit={handleVerdict}
               className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3"
             >
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              <h3 className="text-sm font-bold text-blue-700 dark:text-sky-400">
                 Emitir Parecer Técnico Vinculado ao SHA
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -961,13 +961,13 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
             <span>SEÇÃO 5 E SEÇÃO 19 · GOVERNANÇA GIT E PROTEÇÃO DO REPOSITÓRIO PRINCIPAL</span>
             <span>MODO SEGURO: SOMENTE LEITURA ATIVO</span>
           </div>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">
-            {activeModuleId === 'mod-26' && '26. Gerenciador de Branches Exclusivas & SHAs'}
+          <h1 className="mt-1 text-2xl font-bold text-blue-700 dark:text-sky-400">
+            {activeModuleId === 'mod-26' && 'Gerenciador de Branches Exclusivas & SHAs'}
             {activeModuleId === 'mod-31' &&
-              '31. Git Integration Center (Modo Seguro Somente Leitura)'}
+              'Git Integration Center (Modo Seguro Somente Leitura)'}
             {activeModuleId === 'mod-32' &&
-              '32. Gerenciador de Pull Requests & Planos de Integração'}
-            {activeModuleId === 'mod-33' && '33. Monitoramento de GitHub Actions & Workflows'}
+              'Gerenciador de Pull Requests & Planos de Integração'}
+            {activeModuleId === 'mod-33' && 'Monitoramento de GitHub Actions & Workflows'}
           </h1>
           <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
             O repositório principal do produto (
@@ -1038,17 +1038,17 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
         <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
           Seções 14, 20, 22 e 29 · Memória em 10 Níveis · Proveniência · Governança Constitucional
         </div>
-        <h1 className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-50">
+        <h1 className="mt-1 text-2xl font-bold text-blue-700 dark:text-sky-400">
           {activeModuleId === 'mod-34' &&
-            '34. Central de Memória Estruturada em 10 Níveis (Com Proveniência e Verificação)'}
+            'Central de Memória Estruturada em 10 Níveis (Com Proveniência e Verificação)'}
           {activeModuleId === 'mod-35' &&
-            '35. Biblioteca de Conhecimento & Documentação Permanente do Repositório'}
-          {activeModuleId === 'mod-36' && '36. Central de Evidências, Logs e Artefatos'}
-          {activeModuleId === 'mod-37' && '37. Central de Governança Constitucional'}
+            'Biblioteca de Conhecimento & Documentação Permanente do Repositório'}
+          {activeModuleId === 'mod-36' && 'Central de Evidências, Logs e Artefatos'}
+          {activeModuleId === 'mod-37' && 'Central de Governança Constitucional'}
           {activeModuleId === 'mod-38' &&
-            '38. Central de Segurança, RBAC, Anti-Prompt Injection e Suspensão Emergencial'}
+            'Central de Segurança, RBAC, Anti-Prompt Injection e Suspensão Emergencial'}
           {activeModuleId === 'mod-40' &&
-            '40. Configurações, Administração e Compatibilidade Cloudflare D1'}
+            'Configurações, Administração e Compatibilidade Cloudflare D1'}
         </h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           Nunca tratamos automaticamente uma afirmação produzida por IA como fato verificado. Cada
@@ -1079,7 +1079,7 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
                   {mem.verificationStatus}
                 </span>
               </div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">{mem.title}</h3>
+              <h3 className="text-sm font-bold text-blue-700 dark:text-sky-400">{mem.title}</h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 {mem.content}
               </p>
@@ -1094,7 +1094,7 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
           onSubmit={handleAddMemory}
           className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3"
         >
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+          <h3 className="text-sm font-bold text-blue-700 dark:text-sky-400">
             Registrar Nova Memória com Proveniência
           </h3>
 
@@ -1194,7 +1194,7 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
 
       {/* Entregáveis Documentais Permanentes (Seção 14 e 29) */}
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3">
-        <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+        <h2 className="text-sm font-bold text-blue-700 dark:text-sky-400">
           Documentação Permanente e Migrations Geradas no Repositório (Seção 14 e 29)
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-xs font-mono">

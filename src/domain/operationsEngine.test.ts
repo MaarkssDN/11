@@ -328,3 +328,57 @@ test('Validação Zod de CreateMissionInputSchema e modelos de entidades de src/
   assert.equal(validCostPolicy.success, true);
 });
 
+test('Interceptador MSW (src/mocks/browser.ts) processa /api/state e /api/missions com contratos Zod e relações de src/db/schema.ts', async () => {
+  const { processMockApiRequest, handlers } = await import('../mocks/browser');
+  const { ProviderSchema, TaskSchema, AuditSchema, DATABASE_RELATIONS } = await import('../db/schema');
+
+  assert.ok(handlers.length >= 8);
+  assert.ok(DATABASE_RELATIONS.missions.references.length >= 4);
+
+  const stateRes = await processMockApiRequest('/api/state', 'GET');
+  assert.equal(stateRes.status, 200);
+  const statePayload = stateRes.data as {
+    db: { providers: unknown[]; missions: unknown[]; audits: unknown[] };
+  };
+  assert.equal(statePayload.db.providers.length, 10);
+
+  const providerValidation = ProviderSchema.safeParse(statePayload.db.providers[0]);
+  assert.equal(providerValidation.success, true);
+
+  const auditValidation = AuditSchema.safeParse(statePayload.db.audits[0]);
+  assert.equal(auditValidation.success, true);
+
+  const taskValidation = TaskSchema.safeParse({
+    id: 'TSK-001',
+    missionId: 'MSN-001',
+    title: 'Implementar handler MSW em src/mocks/browser.ts',
+    assignedAgentId: 'AG-012',
+    status: 'CONCLUIDA',
+    modulePath: 'src/mocks/browser.ts',
+    createdAt: '2026-11-25T10:00:00.000Z',
+  });
+  assert.equal(taskValidation.success, true);
+
+  const createMissionRes = await processMockApiRequest(
+    '/api/missions',
+    'POST',
+    JSON.stringify({
+      code: 'B360-MSN-099',
+      title: 'Missão Criada via Mock Service Worker Independente de Backend',
+      waveId: 'ONDA-12',
+      squadId: 'SQ-DEV-NUVEM',
+      executorProviderId: 'IA-07',
+      executorAgentId: 'AG-012',
+      auditorAgentId: 'AG-088',
+      priority: 'CRITICA',
+      branchName: 'wave/12-msw-standalone',
+      worktreePath: 'D:/Birthub360-Operations/worktrees/msn-099',
+      baseSha: '8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b',
+      reservedPort: 3199,
+      ownedModules: ['src/mocks/browser.ts'],
+      acceptanceCriteria: ['Funcionar sem backend', 'Validar via Zod'],
+    })
+  );
+  assert.equal(createMissionRes.status, 201);
+});
+
