@@ -3,8 +3,9 @@ import path from 'path';
 import { B360DatabaseState } from '../shared/contracts';
 import { parseHistoricalConversationDocument } from '../domain/operationsEngine';
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
-const DB_FILE_PATH = path.resolve(DATA_DIR, 'b360-aoc-db.json');
+export function resolveDbFilePath(): string {
+  return path.resolve(process.env.B360_AOC_DB_PATH || path.join('data', 'b360-aoc-db.json'));
+}
 
 const INITIAL_SAMPLE_DRIVE_CONVERSATION = `2026-11-20 [09:15] CONVERSA IMPORTADA (PASTA GOOGLE DRIVE: CONVERSAS ENTRE MARCELO E IAS)
 Participantes: Marcelo (Orquestrador Humano), Gemini, Claude, ChatGPT, Google AI Studio, Devin, Astra e Catarina.
@@ -1098,28 +1099,86 @@ Ao concluir, registre o SHA da entrega, os testes efetivamente executados com se
   };
 }
 
-export function loadDatabase(): B360DatabaseState {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+function ioErrorCode(error: unknown): string {
+  if (
+    error !== null &&
+    typeof error === 'object' &&
+    'code' in error &&
+    typeof error.code === 'string'
+  ) {
+    return error.code;
   }
-  if (!fs.existsSync(DB_FILE_PATH)) {
-    const seed = createInitialSeedDatabase();
-    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(seed, null, 2), 'utf-8');
-    return seed;
-  }
+  return 'UNKNOWN';
+}
+
+function logLoadFailedClosed(reason: string): void {
+  console.error(
+    `[b360-aoc] loadDatabase failed closed (${reason}). The existing database file was not modified or reseeded.`
+  );
+}
+
+function writeDatabaseAtomic(filePath: string, contents: string): void {
+  const dir = path.dirname(filePath);
+  fs.mkdirSync(dir, { recursive: true });
+  const tmpPath = path.join(
+    dir,
+    `.${path.basename(filePath)}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`
+  );
   try {
-    const raw = fs.readFileSync(DB_FILE_PATH, 'utf-8');
+    fs.writeFileSync(tmpPath, contents, { encoding: 'utf-8', flag: 'wx' });
+    try {
+      fs.renameSync(tmpPath, filePath);
+    } catch (renameError) {
+      const code = ioErrorCode(renameError);
+      if (code !== 'EEXIST' && code !== 'EPERM') {
+        throw renameError;
+      }
+      fs.copyFileSync(tmpPath, filePath);
+      fs.unlinkSync(tmpPath);
+    }
+  } catch (error) {
+    try {
+      fs.unlinkSync(tmpPath);
+    } catch {
+      // Temp file is already gone, or it was never created.
+    }
+    throw error;
+  }
+}
+
+// Seed only when the database file is genuinely absent (ENOENT, including a missing parent directory).
+// An existing file that cannot be read or parsed fails closed: throw, do not overwrite, do not reseed.
+// Logs include only the failure class, never file contents (JSON.parse messages can quote the source).
+// Writes go to a temp file in the same directory and then rename over the target (atomic on POSIX).
+// If rename cannot replace an existing file (Node on Windows), the temp is copied over the target.
+export function loadDatabase(): B360DatabaseState {
+  const filePath = resolveDbFilePath();
+  let raw: string;
+  try {
+    raw = fs.readFileSync(filePath, 'utf-8');
+  } catch (error) {
+    if (ioErrorCode(error) === 'ENOENT') {
+      const seed = createInitialSeedDatabase();
+      saveDatabase(seed);
+      return seed;
+    }
+    const code = ioErrorCode(error);
+    logLoadFailedClosed(`read ${code}`);
+    throw new Error(
+      `B360 database file exists but could not be read (${code}). Refusing to overwrite or reseed.`
+    );
+  }
+
+  try {
     return JSON.parse(raw) as B360DatabaseState;
   } catch {
-    const seed = createInitialSeedDatabase();
-    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(seed, null, 2), 'utf-8');
-    return seed;
+    logLoadFailedClosed('invalid JSON');
+    throw new Error(
+      'B360 database file exists but contains invalid JSON. Refusing to overwrite or reseed.'
+    );
   }
 }
 
 export function saveDatabase(state: B360DatabaseState): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  fs.writeFileSync(DB_FILE_PATH, JSON.stringify(state, null, 2), 'utf-8');
+  writeDatabaseAtomic(resolveDbFilePath(), JSON.stringify(state, null, 2));
 }
