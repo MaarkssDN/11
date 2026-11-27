@@ -9,7 +9,7 @@ Plataforma empresarial de comando, comunicação, coordenação, automação, au
 - **Frontend**: React 19 + TypeScript (`strict: true`) + Vite + Tailwind CSS v4 + Lucide Icons + Design Tokens centralizados preparados para o brandbook oficial do Birthub 360.
 - **Backend & Contratos**: Express (`server.ts`) com contratos compartilhados e validação Zod (`src/shared/contracts.ts`).
 - **Motor de Domínio Desacoplado**: Regras puras em `src/domain/operationsEngine.ts` cobertas por testes unitários reais (`node:test`).
-- **Persistência**: Armazenamento persistente local (`data/b360-aoc-db.json`) e schema relacional completo com **45 tabelas** compatível com **Cloudflare D1** em `migrations/0001_initial_schema.sql`.
+- **Persistência**: Armazenamento persistente local (`data/b360-aoc-db.json`, ou o caminho em `B360_AOC_DB_PATH`) e schema relacional completo com **45 tabelas** compatível com **Cloudflare D1** em `migrations/0001_initial_schema.sql`. O arquivo só é semeado quando ainda não existe (`ENOENT`). Se ele existe e a leitura ou o JSON falha, `loadDatabase` lança erro e não altera o arquivo. A gravação usa um temporário no mesmo diretório seguido de `rename`.
 
 ## 2. Instruções de Execução
 
@@ -21,7 +21,7 @@ npm install
 npm run lint
 
 # Executar suíte de testes unitários reais do motor de operações
-npx --yes tsx --test src/domain/operationsEngine.test.ts
+npx --yes tsx --test src/domain/operationsEngine.test.ts src/server/db.test.ts
 
 # Executar build de produção
 npm run build
