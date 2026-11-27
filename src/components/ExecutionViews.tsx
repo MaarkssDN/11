@@ -40,6 +40,10 @@ interface ExecutionViewsProps {
     acceptanceCriteria: string[];
     promptBody: string;
   }) => Promise<{ ok: boolean; error?: string }>;
+  onAutomationJobAction?: (
+    jobId: string,
+    action: 'ACQUIRE_LEASE' | 'HEARTBEAT' | 'COMPLETE' | 'FAIL_AND_RETRY' | 'PAUSE' | 'RESUME'
+  ) => Promise<{ ok: boolean; message?: string; error?: string }>;
 }
 
 export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
@@ -49,6 +53,7 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
   onTransitionMission,
   onToggleChecklistItem,
   onCreatePrompt,
+  onAutomationJobAction,
 }) => {
   const [selectedMissionId, setSelectedMissionId] = useState<string>(
     db.missions[0]?.id || 'MSN-001'
@@ -1130,6 +1135,31 @@ export const ExecutionViews: React.FC<ExecutionViewsProps> = ({
                     <div className="text-slate-500">
                       Tentativas: {job.retryCount}/{job.maxRetries}
                     </div>
+                    {onAutomationJobAction && (
+                      <div className="mt-1.5 flex items-center justify-end gap-1">
+                        <button
+                          type="button"
+                          onClick={() => onAutomationJobAction(job.id, 'ACQUIRE_LEASE')}
+                          className="px-2 py-0.5 rounded bg-blue-600 text-white text-[10px] font-semibold hover:bg-blue-500"
+                        >
+                          Lease
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onAutomationJobAction(job.id, 'HEARTBEAT')}
+                          className="px-2 py-0.5 rounded border border-slate-300 dark:border-slate-700 text-[10px] hover:bg-slate-100 dark:hover:bg-slate-800"
+                        >
+                          Heartbeat
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onAutomationJobAction(job.id, 'COMPLETE')}
+                          className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-semibold hover:bg-emerald-500"
+                        >
+                          Concluir
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

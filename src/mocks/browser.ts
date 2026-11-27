@@ -12,9 +12,14 @@ import {
 import {
   computeContentFingerprint,
   computeNextMissionStep,
+  detectMemoryConflicts,
+  evaluateGitIntegrationPlan,
   evaluateMissionPreflight,
+  evaluateWaveReleaseProgression,
+  generateCloudflareD1SqlSnapshot,
   parseHistoricalConversationDocument,
   selectCatarinaSpecialistsForModules,
+  transitionAutomationJobState,
   validateAuditApproval,
 } from '../domain/operationsEngine';
 
@@ -1483,20 +1488,129 @@ export async function processMockApiRequest(
   if (upperMethod === 'POST' && cleanPath === '/api/memories') {
     const payload = (body || {}) as Record<string, any>;
     const db = getBrowserMockDb();
-    const newMemory = {
-      id: `MEM-${String(db.memories.length + 1).padStart(3, '0')}`,
+    const candidate = {
       level: payload.level || 'GLOBAL',
       entityRef: payload.entityRef || 'B360-AOC',
       title: payload.title || 'Registro de Memória',
       content: payload.content || '',
-      provenance: payload.provenance || 'Orquestrador Humano',
       verificationStatus: payload.verificationStatus || 'FATO_VERIFICADO_SHA',
+    };
+    const conflictEval = detectMemoryConflicts(candidate, db.memories);
+    const newMemory = {
+      id: `MEM-${String(db.memories.length + 1).padStart(3, '0')}`,
+      ...candidate,
+      provenance: payload.provenance || 'Orquestrador Humano',
+      verificationStatus: conflictEval.recommendedStatus,
       version: 1,
       updatedAt: new Date().toISOString(),
     };
     db.memories.unshift(newMemory);
     saveBrowserMockDb(db);
-    return { status: 201, data: { memory: newMemory } };
+    return { status: 201, data: { memory: newMemory, conflictEvaluation: conflictEval } };
+  }
+
+  const jobActionMatch = cleanPath.match(/^\/api\/automation-jobs\/([^/]+)\/action$/);
+  if (upperMethod === 'POST' && jobActionMatch) {
+    const jobId = jobActionMatch[1];
+    const payload = (body || {}) as Record<string, any>;
+    const db = getBrowserMockDb();
+    const idx = db.automationJobs.findIndex((j) => j.id === jobId);
+    if (idx === -1) {
+      return { status: 404, data: { error: 'Job não encontrado.' } };
+    }
+    const outcome = transitionAutomationJobState(
+      db.automationJobs[idx],
+      payload.action || 'HEARTBEAT',
+      payload.actorId || 'IA-10 (Devin Local Runner)',
+      db.governance.globalAutomationSuspended,
+      db.governance.devinBridgeEnabled
+    );
+    db.automationJobs[idx] = outcome.job;
+    saveBrowserMockDb(db);
+    if (!outcome.allowed) {
+      return { status: 422, data: { error: outcome.reason, job: outcome.job } };
+    }
+    return { status: 200, data: { job: outcome.job, message: outcome.reason } };
+  }
+
+  if (upperMethod === 'POST' && cleanPath === '/api/runner/heartbeat') {
+    const payload = (body || {}) as Record<string, any>;
+    const db = getBrowserMockDb();
+    if (!db.governance.devinBridgeEnabled) {
+      return { status: 403, data: { error: 'Ponte Runner Local pausada na governança.' } };
+    }
+    const now = new Date().toISOString();
+    const pendingLocalJobs = db.automationJobs.filter(
+      (j) => j.targetEnvironment === 'LOCAL_WINDOWS' && j.status !== 'CONCLUIDA'
+    );
+    for (const job of pendingLocalJobs) {
+      job.lastHeartbeatAt = now;
+      if (job.status === 'AGUARDANDO_MAQUINA_LOCAL' || job.status === 'NA_FILA') {
+        job.status = 'LEASE_ATIVO';
+        job.leaseOwner = `${payload.runnerId || 'RUNNER-WIN-B360-01'} (${payload.hostName || 'WIN-LOCAL'})`;
+      }
+    }
+    db.governance.auditLogs.unshift({
+      id: `LOG-${Date.now()}`,
+      timestamp: now,
+      actor: `${payload.runnerId || 'RUNNER-WIN-B360-01'} (${payload.hostName || 'WIN-LOCAL'})`,
+      action: 'RUNNER_LOCAL_OUTBOUND_HEARTBEAT',
+      target: `C: ${payload.driveCFreeGb ?? 120}GB | D: ${payload.driveDFreeGb ?? 450}GB | Worktrees: ${payload.activeWorktreesCount ?? db.missions.length}`,
+      shaOrRef: 'OUTBOUND-MTLS-OK',
+    });
+    saveBrowserMockDb(db);
+    return {
+      status: 200,
+      data: {
+        ok: true,
+        receivedAt: now,
+        pendingLocalJobsCount: pendingLocalJobs.length,
+        runnerTelemetry: payload,
+      },
+    };
+  }
+
+  const waveReleaseMatch = cleanPath.match(/^\/api\/waves\/([^/]+)\/release-next$/);
+  if (upperMethod === 'POST' && waveReleaseMatch) {
+    const waveId = waveReleaseMatch[1];
+    const db = getBrowserMockDb();
+    const evalWave = evaluateWaveReleaseProgression(waveId, db.waves, db.missions);
+    if (!evalWave.canCompleteWave) {
+      return { status: 422, data: { error: evalWave.reason, evaluation: evalWave } };
+    }
+    const currWave = db.waves.find((w) => w.id === waveId);
+    if (currWave) currWave.status = 'CONCLUIDA_FUNDACAO';
+    if (evalWave.nextWaveReleasedId) {
+      const nextWave = db.waves.find((w) => w.id === evalWave.nextWaveReleasedId);
+      if (nextWave && nextWave.status === 'PLANEJADA') nextWave.status = 'EM_ANDAMENTO';
+    }
+    saveBrowserMockDb(db);
+    return { status: 200, data: { evaluation: evalWave, waves: db.waves } };
+  }
+
+  const gitPlanMatch = cleanPath.match(/^\/api\/git\/integration-plan\/([^/]+)$/);
+  if (upperMethod === 'GET' && gitPlanMatch) {
+    const missionId = gitPlanMatch[1];
+    const db = getBrowserMockDb();
+    const mission = db.missions.find((m) => m.id === missionId);
+    if (!mission) {
+      return { status: 404, data: { error: 'Missão não encontrada.' } };
+    }
+    const plan = evaluateGitIntegrationPlan(
+      mission,
+      db.audits,
+      db.governance.gitSafeReadOnlyMode
+    );
+    return { status: 200, data: { plan, mission } };
+  }
+
+  if (upperMethod === 'GET' && cleanPath === '/api/admin/export-d1-sql') {
+    const db = getBrowserMockDb();
+    const sql = generateCloudflareD1SqlSnapshot(db);
+    return {
+      status: 200,
+      data: { sql, generatedAt: new Date().toISOString(), tablesExported: 45 },
+    };
   }
 
   if (upperMethod === 'POST' && cleanPath === '/api/governance/devin-bridge') {

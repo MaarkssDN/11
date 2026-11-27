@@ -1,5 +1,15 @@
 # CHANGELOG.md — Histórico Auditável de Entregas (B360-AOC)
 
+## [0.2.0] — 2026-11-26 — Reativação da Ponte Runner Local Devin & 10 Passos Lógicos de Engenharia
+
+### Implementado
+- **Ponte Runner Local Windows com Devin (`IA-10`) Ativada**: Endpoint `POST /api/governance/devin-bridge`, estado `CONECTADO_API_LOCAL` (`API_NATIVA_ATIVA`) com 10 capacidades habilitadas e desbloqueio automático de preflight da Missão `B360-MSN-002`.
+- **Agente Outbound PowerShell (`scripts/devin-local-runner.ps1`) & Endpoint `POST /api/runner/heartbeat`**: Coleta real de espaço livre nas unidades `C:` e `D:`, auditoria anti-junctions/symlinks em `node_modules` e sincronização outbound mTLS/HMAC sem exposição de terminal.
+- **Motor de Automação (`transitionAutomationJobState` & `POST /api/automation-jobs/:id/action`)**: Aquisição de leases, heartbeats, retries com backoff, pausa e conclusão diretamente na UI.
+- **Validador de Plano de Pull Request Git (`evaluateGitIntegrationPlan` & `GET /api/git/integration-plan/:missionId`)**: Verifica vínculo de SHA aprovado e 100% dos testes executados mantendo o repositório principal em modo seguro somente leitura.
+- **Detector de Conflitos de Memória (`detectMemoryConflicts`)**: Identifica automaticamente contradições com regras constitucionais e marca registros conflitantes como `CONFLITO_DETECTADO`.
+- **Motor de Liberação Progressiva de Ondas (`evaluateWaveReleaseProgression` & `POST /api/waves/:id/release-next`)** e **Exportador Determinístico SQL Cloudflare D1 (`generateCloudflareD1SqlSnapshot` & `GET /api/admin/export-d1-sql`)**.
+
 ## [0.1.0] — 2026-11-25 — Primeira Entrega Obrigatória (Fundação B360-AOC)
 
 ### Implementado

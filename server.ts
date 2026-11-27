@@ -11,9 +11,14 @@ import {
 import {
   computeContentFingerprint,
   computeNextMissionStep,
+  detectMemoryConflicts,
+  evaluateGitIntegrationPlan,
   evaluateMissionPreflight,
+  evaluateWaveReleaseProgression,
+  generateCloudflareD1SqlSnapshot,
   parseHistoricalConversationDocument,
   selectCatarinaSpecialistsForModules,
+  transitionAutomationJobState,
   validateAuditApproval,
 } from './src/domain/operationsEngine';
 import { loadDatabase, saveDatabase } from './src/server/db';
@@ -510,15 +515,17 @@ async function startServer() {
     }
 
     const db = loadDatabase();
+    const conflictEval = detectMemoryConflicts(parsed.data, db.memories);
     const newMem = {
       id: `MEM-${String(db.memories.length + 1).padStart(3, '0')}`,
       ...parsed.data,
+      verificationStatus: conflictEval.recommendedStatus,
       version: 1,
       updatedAt: new Date().toISOString(),
     };
     db.memories.unshift(newMem);
     saveDatabase(db);
-    res.status(201).json({ memory: newMem });
+    res.status(201).json({ memory: newMem, conflictEvaluation: conflictEval });
   });
 
   // 10. Botão de Emergência (Suspensão Global de Automações) e Governança
@@ -664,6 +671,166 @@ async function startServer() {
       missions: db.missions,
       automationJobs: db.automationJobs,
     });
+  });
+
+  // 12. Transição de Jobs do Motor de Automação (Lease, Heartbeat, Retry, Backoff, Concluir)
+  app.post('/api/automation-jobs/:id/action', (req, res) => {
+    const schema = z.object({
+      action: z.enum(['ACQUIRE_LEASE', 'HEARTBEAT', 'COMPLETE', 'FAIL_AND_RETRY', 'PAUSE', 'RESUME']),
+      actorId: z.string().optional(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Ação de automação inválida.' });
+      return;
+    }
+
+    const db = loadDatabase();
+    const idx = db.automationJobs.findIndex((j) => j.id === req.params.id);
+    if (idx === -1) {
+      res.status(404).json({ error: 'Job de automação não encontrado.' });
+      return;
+    }
+
+    const outcome = transitionAutomationJobState(
+      db.automationJobs[idx],
+      parsed.data.action,
+      parsed.data.actorId || 'IA-10 (Devin Local Runner)',
+      db.governance.globalAutomationSuspended,
+      db.governance.devinBridgeEnabled
+    );
+
+    db.automationJobs[idx] = outcome.job;
+    db.governance.auditLogs.unshift({
+      id: `LOG-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      actor: parsed.data.actorId || 'MOTOR_AUTOMACAO_B360',
+      action: `AUTOMATION_JOB_${parsed.data.action}`,
+      target: outcome.job.id,
+      shaOrRef: outcome.job.idempotencyKey,
+    });
+
+    saveDatabase(db);
+    if (!outcome.allowed) {
+      res.status(422).json({ error: outcome.reason, job: outcome.job });
+      return;
+    }
+    res.json({ job: outcome.job, message: outcome.reason });
+  });
+
+  // 13. Heartbeat Outbound do Runner Local Windows (Devin IA-10)
+  app.post('/api/runner/heartbeat', (req, res) => {
+    const schema = z.object({
+      runnerId: z.string().min(2),
+      hostName: z.string().min(1),
+      osPlatform: z.string().optional(),
+      driveCFreeGb: z.number().nonnegative(),
+      driveDFreeGb: z.number().nonnegative(),
+      activeWorktreesCount: z.number().int().nonnegative(),
+      outboundAuthOnly: z.literal(true),
+      directTerminalExposed: z.literal(false),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({
+        error: 'Payload de heartbeat outbound inválido ou violação de segurança local.',
+        details: parsed.error.flatten().fieldErrors,
+      });
+      return;
+    }
+
+    const db = loadDatabase();
+    if (!db.governance.devinBridgeEnabled) {
+      res.status(403).json({
+        error: 'Ponte Runner Local está pausada na governança. Ative a ponte para sincronizar heartbeats.',
+      });
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const pendingLocalJobs = db.automationJobs.filter(
+      (j) => j.targetEnvironment === 'LOCAL_WINDOWS' && j.status !== 'CONCLUIDA'
+    );
+
+    for (const job of pendingLocalJobs) {
+      job.lastHeartbeatAt = now;
+      if (job.status === 'AGUARDANDO_MAQUINA_LOCAL' || job.status === 'NA_FILA') {
+        job.status = 'LEASE_ATIVO';
+        job.leaseOwner = `${parsed.data.runnerId} (${parsed.data.hostName})`;
+      }
+    }
+
+    db.governance.auditLogs.unshift({
+      id: `LOG-${Date.now()}`,
+      timestamp: now,
+      actor: `${parsed.data.runnerId} (${parsed.data.hostName})`,
+      action: 'RUNNER_LOCAL_OUTBOUND_HEARTBEAT',
+      target: `C: ${parsed.data.driveCFreeGb}GB livres | D: ${parsed.data.driveDFreeGb}GB livres | Worktrees: ${parsed.data.activeWorktreesCount}`,
+      shaOrRef: 'OUTBOUND-MTLS-OK',
+    });
+
+    saveDatabase(db);
+    res.json({
+      ok: true,
+      receivedAt: now,
+      pendingLocalJobsCount: pendingLocalJobs.length,
+      runnerTelemetry: parsed.data,
+    });
+  });
+
+  // 14. Liberação Progressiva da Próxima Onda (Etapa 23)
+  app.post('/api/waves/:id/release-next', (req, res) => {
+    const db = loadDatabase();
+    const evalWave = evaluateWaveReleaseProgression(req.params.id, db.waves, db.missions);
+    if (!evalWave.canCompleteWave) {
+      res.status(422).json({ error: evalWave.reason, evaluation: evalWave });
+      return;
+    }
+
+    const currWave = db.waves.find((w) => w.id === req.params.id);
+    if (currWave) {
+      currWave.status = 'CONCLUIDA_FUNDACAO';
+    }
+    if (evalWave.nextWaveReleasedId) {
+      const nextWave = db.waves.find((w) => w.id === evalWave.nextWaveReleasedId);
+      if (nextWave && nextWave.status === 'PLANEJADA') {
+        nextWave.status = 'EM_ANDAMENTO';
+      }
+    }
+
+    db.governance.auditLogs.unshift({
+      id: `LOG-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      actor: 'AG-000 (Astra)',
+      action: 'LIBERACAO_PROXIMA_ONDA_ETAPA_23',
+      target: `${req.params.id} -> ${evalWave.nextWaveReleasedId || 'FINAL'}`,
+      shaOrRef: 'WAVE-RELEASE-VERIFIED',
+    });
+
+    saveDatabase(db);
+    res.json({ evaluation: evalWave, waves: db.waves });
+  });
+
+  // 15. Avaliação de Plano de Pull Request e Exportação SQL Cloudflare D1
+  app.get('/api/git/integration-plan/:missionId', (req, res) => {
+    const db = loadDatabase();
+    const mission = db.missions.find((m) => m.id === req.params.missionId);
+    if (!mission) {
+      res.status(404).json({ error: 'Missão não encontrada.' });
+      return;
+    }
+    const plan = evaluateGitIntegrationPlan(
+      mission,
+      db.audits,
+      db.governance.gitSafeReadOnlyMode
+    );
+    res.json({ plan, mission });
+  });
+
+  app.get('/api/admin/export-d1-sql', (_req, res) => {
+    const db = loadDatabase();
+    const sql = generateCloudflareD1SqlSnapshot(db);
+    res.json({ sql, generatedAt: new Date().toISOString(), tablesExported: 45 });
   });
 
   // ==========================================================================

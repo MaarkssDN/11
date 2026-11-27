@@ -3,9 +3,14 @@ import assert from 'node:assert/strict';
 import {
   computeContentFingerprint,
   computeNextMissionStep,
+  detectMemoryConflicts,
+  evaluateGitIntegrationPlan,
   evaluateMissionPreflight,
+  evaluateWaveReleaseProgression,
+  generateCloudflareD1SqlSnapshot,
   parseHistoricalConversationDocument,
   selectCatarinaSpecialistsForModules,
+  transitionAutomationJobState,
   validateAuditApproval,
 } from './operationsEngine';
 import { AuditRecord, Mission, OperationalAgent } from '../shared/contracts';
@@ -403,5 +408,41 @@ test('Interceptador MSW (src/mocks/browser.ts) processa /api/state e /api/missio
   saveDatabase(freshSeed);
   assert.equal(freshSeed.governance.devinBridgeEnabled, true);
   assert.equal(freshSeed.governance.devinContractVerified, true);
+
+  // Teste de transição de leases e retries da fila de automação
+  const sampleJob = freshSeed.automationJobs[1];
+  const leaseOutcome = transitionAutomationJobState(sampleJob, 'ACQUIRE_LEASE', 'RUNNER-WIN-B360-01');
+  assert.equal(leaseOutcome.allowed, true);
+  assert.equal(leaseOutcome.job.status, 'LEASE_ATIVO');
+
+  const retryOutcome = transitionAutomationJobState(leaseOutcome.job, 'FAIL_AND_RETRY');
+  assert.equal(retryOutcome.job.retryCount, 1);
+  assert.equal(retryOutcome.job.status, 'NA_FILA');
+
+  // Teste de avaliação de plano de integração Git somente leitura
+  const gitPlanBlocked = evaluateGitIntegrationPlan(freshSeed.missions[0], freshSeed.audits, true);
+  assert.equal(gitPlanBlocked.readyForHumanApproval, false);
+  assert.equal(gitPlanBlocked.targetRepoProtected, true);
+
+  // Teste de detecção de conflitos de memória e exportação SQL D1
+  const conflictCheck = detectMemoryConflicts(
+    {
+      level: 'GLOBAL',
+      entityRef: 'B360-AOC-CONSTITUTION',
+      title: 'Tentativa de habilitar API paga',
+      content: 'Habilitar contratação de API paga sem limite',
+      verificationStatus: 'AFIRMACAO_IA_NAO_VERIFICADA',
+    },
+    freshSeed.memories
+  );
+  assert.equal(conflictCheck.hasConflict, true);
+  assert.equal(conflictCheck.recommendedStatus, 'CONFLITO_DETECTADO');
+
+  const waveEval = evaluateWaveReleaseProgression('ONDA-01', freshSeed.waves, freshSeed.missions);
+  assert.equal(waveEval.canCompleteWave, false);
+
+  const d1Sql = generateCloudflareD1SqlSnapshot(freshSeed);
+  assert.ok(d1Sql.includes('INSERT OR REPLACE INTO Providers'));
+  assert.ok(d1Sql.includes('INSERT OR REPLACE INTO Missions'));
 });
 

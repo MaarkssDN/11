@@ -59,6 +59,7 @@ interface LocalAndGovernanceViewsProps {
       | 'CONFLITO_DETECTADO';
   }) => Promise<{ ok: boolean; error?: string }>;
   onToggleDevinBridge?: (enabled: boolean, reason: string) => Promise<{ ok: boolean; error?: string }>;
+  onSendRunnerHeartbeat?: () => Promise<{ ok: boolean; error?: string }>;
 }
 
 export const LocalAndGovernanceViews: React.FC<LocalAndGovernanceViewsProps> = ({
@@ -69,6 +70,7 @@ export const LocalAndGovernanceViews: React.FC<LocalAndGovernanceViewsProps> = (
   onSubmitAuditVerdict,
   onCreateMemory,
   onToggleDevinBridge,
+  onSendRunnerHeartbeat,
 }) => {
   // Mensagens entre IAs state
   const [msgAuthorType, setMsgAuthorType] = useState<
@@ -556,26 +558,37 @@ Evidência: Parser determinístico validado em operationsEngine.test.ts.`
               </p>
             </div>
             {onToggleDevinBridge && (
-              <button
-                type="button"
-                onClick={() =>
-                  onToggleDevinBridge(
-                    !isBridgeActive,
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                {onSendRunnerHeartbeat && isBridgeActive && (
+                  <button
+                    type="button"
+                    onClick={() => onSendRunnerHeartbeat()}
+                    className="px-3.5 py-2 rounded-lg border border-emerald-600/40 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-800 dark:text-emerald-300 text-xs font-semibold whitespace-nowrap transition-colors"
+                  >
+                    Sincronizar Heartbeat Outbound (C: / D:)
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    onToggleDevinBridge(
+                      !isBridgeActive,
+                      isBridgeActive
+                        ? 'Ponte Runner Local pausada pelo Orquestrador Humano'
+                        : 'Ponte Runner Local ativada pelo Orquestrador Humano'
+                    )
+                  }
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
                     isBridgeActive
-                      ? 'Ponte Runner Local pausada pelo Orquestrador Humano'
-                      : 'Ponte Runner Local ativada pelo Orquestrador Humano'
-                  )
-                }
-                className={`px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
-                  isBridgeActive
-                    ? 'bg-amber-600 hover:bg-amber-500 text-white'
-                    : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                }`}
-              >
-                {isBridgeActive
-                  ? 'Pausar Ponte Runner Local'
-                  : 'Ativar Ponte Runner Local com Devin'}
-              </button>
+                      ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                  }`}
+                >
+                  {isBridgeActive
+                    ? 'Pausar Ponte Runner Local'
+                    : 'Ativar Ponte Runner Local com Devin'}
+                </button>
+              </div>
             )}
           </div>
         </div>

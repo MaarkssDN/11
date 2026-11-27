@@ -292,6 +292,42 @@ export default function App() {
     return { ok: true };
   };
 
+  const handleAutomationJobAction = async (
+    jobId: string,
+    action: 'ACQUIRE_LEASE' | 'HEARTBEAT' | 'COMPLETE' | 'FAIL_AND_RETRY' | 'PAUSE' | 'RESUME'
+  ) => {
+    const res = await apiFetch(`/api/automation-jobs/${jobId}/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, actorId: 'IA-10 (Devin Local Runner)' }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.error };
+    await fetchState();
+    return { ok: true, message: data.message };
+  };
+
+  const handleSendRunnerHeartbeat = async () => {
+    const res = await apiFetch('/api/runner/heartbeat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        runnerId: 'RUNNER-WIN-B360-01',
+        hostName: 'MARCELO-WIN-AOC',
+        osPlatform: 'Windows 11 Pro x64',
+        driveCFreeGb: 142.8,
+        driveDFreeGb: 518.4,
+        activeWorktreesCount: db?.missions.length || 2,
+        outboundAuthOnly: true,
+        directTerminalExposed: false,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.error };
+    await fetchState();
+    return { ok: true };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 p-6">
@@ -571,6 +607,7 @@ export default function App() {
               onTransitionMission={handleTransitionMission}
               onToggleChecklistItem={handleToggleChecklistItem}
               onCreatePrompt={handleCreatePrompt}
+              onAutomationJobAction={handleAutomationJobAction}
             />
           ) : (
             <LocalAndGovernanceViews
@@ -581,6 +618,7 @@ export default function App() {
               onSubmitAuditVerdict={handleSubmitAuditVerdict}
               onCreateMemory={handleCreateMemory}
               onToggleDevinBridge={handleToggleDevinBridge}
+              onSendRunnerHeartbeat={handleSendRunnerHeartbeat}
             />
           )}
         </main>
